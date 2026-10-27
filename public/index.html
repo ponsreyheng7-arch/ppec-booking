@@ -1,0 +1,3061 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>PPEC Eye Operating Room Booking Platform</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    * {
+      box-sizing: border-box;
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    }
+    body {
+      margin: 0;
+      background-color: #f8fafc;
+      color: #0f172a;
+    }
+    .custom-scroll::-webkit-scrollbar {
+      height: 8px;
+      width: 8px;
+    }
+    .custom-scroll::-webkit-scrollbar-track {
+      background: #f1f5f9;
+      border-radius: 9999px;
+    }
+    .custom-scroll::-webkit-scrollbar-thumb {
+      background: #cbd5e1;
+      border-radius: 9999px;
+    }
+    .custom-scroll::-webkit-scrollbar-thumb:hover {
+      background: #94a3b8;
+    }
+    @keyframes pulse-ring {
+      0% { transform: scale(0.95); opacity: 0.9; }
+      50% { transform: scale(1.15); opacity: 0.4; }
+      100% { transform: scale(0.95); opacity: 0.9; }
+    }
+    .live-dot {
+      animation: pulse-ring 2s infinite ease-in-out;
+    }
+    .striped-occupied {
+      background-image: repeating-linear-gradient(
+        -45deg,
+        rgba(100, 116, 139, 0.12),
+        rgba(100, 116, 139, 0.12) 8px,
+        rgba(100, 116, 139, 0.22) 8px,
+        rgba(100, 116, 139, 0.22) 16px
+      );
+    }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col bg-slate-50 text-slate-900">
+
+  <!-- ===================================================================== -->
+  <!-- LOGIN OVERLAY GATE (Q1, Q2, Q12: Phone + Password, Default = "1")     -->
+  <!-- ===================================================================== -->
+  <div id="loginGateOverlay" class="fixed inset-0 z-50 bg-slate-950/95 backdrop-blur-md flex items-center justify-center p-4 overflow-y-auto">
+    <div class="max-w-md w-full bg-white rounded-3xl shadow-2xl border border-slate-200 overflow-hidden my-6">
+      <!-- Top Brand Banner -->
+      <div class="bg-gradient-to-br from-slate-900 via-slate-800 to-teal-950 p-6 text-white">
+        <div class="flex items-center gap-3">
+          <div class="w-12 h-12 rounded-2xl bg-teal-500/20 border border-teal-400/40 flex items-center justify-center text-teal-300 shadow-inner">
+            <svg class="w-7 h-7 text-teal-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+            </svg>
+          </div>
+          <div>
+            <span class="text-[11px] font-bold uppercase tracking-widest text-teal-300">PPEC Eye Surgical Center</span>
+            <h1 class="text-lg font-extrabold tracking-tight">Operating Room Booking Portal</h1>
+            <p class="text-xs text-slate-300 mt-0.5">Approved Surgeons &amp; Administrators Only</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Login Form -->
+      <form id="loginForm" class="p-6 space-y-4">
+        <div id="loginErrorBanner" class="hidden p-3 rounded-xl bg-rose-50 border border-rose-200 text-xs font-semibold text-rose-700">
+          Invalid phone/email or password, or account is pending Admin approval.
+        </div>
+
+        <div>
+          <label class="block text-xs font-bold text-slate-700 mb-1">Doctor / Admin Phone or Email *</label>
+          <input id="loginPhoneInput" type="text" required value="012888001" autocomplete="username" placeholder="e.g. 012888001 or your Firebase account email" class="w-full px-3.5 py-2.5 text-sm bg-slate-50 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500 focus:bg-white" />
+        </div>
+
+        <div>
+          <label class="block text-xs font-bold text-slate-700 mb-1">Password *</label>
+          <input id="loginPasswordInput" type="password" required autocomplete="current-password" placeholder="Enter your Firebase password" class="w-full px-3.5 py-2.5 text-sm bg-slate-50 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500 focus:bg-white" />
+        </div>
+
+        <button type="submit" class="w-full py-2.5 px-4 rounded-xl bg-teal-600 hover:bg-teal-500 text-white font-bold text-sm shadow-md transition flex items-center justify-center gap-2">
+          <span>Sign In to Platform</span>
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
+        </button>
+
+        <!-- Quick account selector -->
+        <div class="pt-4 border-t border-slate-200 space-y-2">
+          <div class="flex items-center justify-between text-[11px] font-bold text-slate-500 uppercase tracking-wider">
+            <span>Quick Account Selection</span>
+            <span class="text-teal-600">Select account</span>
+          </div>
+          <div id="quickLoginAccountsList" class="grid grid-cols-1 gap-1.5 max-h-48 overflow-y-auto pr-1">
+            <!-- Populated by JS -->
+          </div>
+        </div>
+        <p class="text-[11px] text-slate-500">Bookings and profiles are stored in Firebase after sign-in. You can enter your Firebase email in the phone field if it is not one of the demo accounts.</p>
+      </form>
+    </div>
+  </div>
+
+  <!-- ===================================================================== -->
+  <!-- FIRST-TIME PASSWORD CHANGE MODAL (Q2: Default Password = "1")         -->
+  <!-- ===================================================================== -->
+  <div id="changePasswordModal" class="fixed inset-0 z-50 hidden bg-slate-900/70 backdrop-blur-xs flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl max-w-md w-full border border-slate-200 shadow-2xl overflow-hidden">
+      <div class="px-6 py-4 bg-amber-500 text-slate-950 flex items-center justify-between">
+        <div>
+          <h3 class="text-base font-extrabold">Update Your Password</h3>
+          <p class="text-xs font-medium text-slate-900">Set a new password for your Firebase account</p>
+        </div>
+      </div>
+      <form id="changePasswordForm" class="p-6 space-y-4">
+        <p class="text-xs text-slate-600 leading-relaxed">
+          For clinical safety and privacy, update your Firebase password before continuing.
+        </p>
+        <div>
+          <label class="block text-xs font-bold text-slate-700 mb-1">New Password *</label>
+          <input id="newPasswordInput" type="password" required minlength="1" placeholder="Enter new password..." class="w-full px-3.5 py-2 text-sm border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500" />
+        </div>
+        <div class="flex items-center justify-end gap-2 pt-2">
+          <button type="button" id="skipPasswordChangeBtn" class="px-3.5 py-2 rounded-xl text-xs font-semibold bg-slate-100 hover:bg-slate-200 text-slate-700 transition">
+            Skip for now
+          </button>
+          <button type="submit" class="px-4 py-2 rounded-xl text-xs font-bold bg-teal-600 hover:bg-teal-500 text-white transition">
+            Update Password
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ===================================================================== -->
+  <!-- TOP NAVIGATION HEADER                                                 -->
+  <!-- ===================================================================== -->
+  <header class="bg-slate-900 text-white border-b border-slate-800 sticky top-0 z-30 shadow-md">
+    <div class="max-w-[1600px] mx-auto px-4 sm:px-6 py-3 flex flex-wrap items-center justify-between gap-3">
+      <!-- Brand Identity -->
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-xl bg-teal-500/20 border border-teal-400/40 flex items-center justify-center text-teal-300 font-extrabold text-lg shadow-inner">
+          <svg class="w-6 h-6 text-teal-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+          </svg>
+        </div>
+        <div>
+          <div class="flex flex-wrap items-center gap-2">
+            <h1 class="text-sm sm:text-base font-extrabold tracking-tight text-white">PPEC Eye OR Booking Platform</h1>
+            <span id="cloudSyncBadge" class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+              <span id="cloudSyncDot" class="w-2 h-2 rounded-full bg-emerald-400 live-dot"></span>
+              <span id="cloudSyncText">FIREBASE INITIALIZING</span>
+            </span>
+          </div>
+          <p class="text-[11px] text-slate-400">
+            2 Surgical Beds (<strong class="text-teal-300">Bed A Zeiss</strong> &amp; <strong class="text-indigo-300">Bed B Leica</strong>) • Mon–Sat (Morning 08:00–11:00 | Afternoon 02:00–05:00)
+          </p>
+        </div>
+      </div>
+
+      <!-- Date Controls, User Role Badge & Primary Actions -->
+      <div class="flex flex-wrap items-center gap-2 sm:gap-2.5">
+        <!-- Date Navigator -->
+        <div class="flex items-center bg-slate-800 rounded-xl p-1 border border-slate-700">
+          <button id="prevDayBtn" type="button" title="Previous Day" class="p-1.5 hover:bg-slate-700 rounded-lg text-slate-300 hover:text-white transition">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
+          </button>
+          <input id="scheduleDateInput" type="date" value="2026-10-15" class="bg-transparent text-xs sm:text-sm font-semibold text-white px-2 py-1 focus:outline-none cursor-pointer" />
+          <button id="nextDayBtn" type="button" title="Next Day" class="p-1.5 hover:bg-slate-700 rounded-lg text-slate-300 hover:text-white transition">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+          </button>
+          <button id="todayBtn" type="button" class="text-xs font-semibold bg-slate-700 hover:bg-slate-600 text-slate-200 px-2.5 py-1 rounded-lg ml-1 transition">
+            Today
+          </button>
+        </div>
+
+        <!-- Book Operating Room Button -->
+        <button id="newBookingBtn" type="button" class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs sm:text-sm font-bold bg-teal-500 hover:bg-teal-400 text-slate-950 shadow-sm transition">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"/>
+          </svg>
+          <span>Book Operating Bed</span>
+        </button>
+
+        <!-- Current User Pill & Switch/Logout -->
+        <div class="flex items-center gap-2 bg-slate-800/90 border border-slate-700 rounded-xl px-3 py-1.5">
+          <div class="text-right">
+            <div class="flex items-center gap-1.5">
+              <span id="headerUserRoleBadge" class="px-1.5 py-0.2 rounded text-[10px] font-extrabold uppercase bg-teal-500/20 text-teal-300 border border-teal-500/30">ADMIN</span>
+              <span id="headerUserName" class="text-xs font-bold text-white">PPEC Admin</span>
+            </div>
+            <div id="headerUserPhone" class="text-[10px] text-slate-400 font-mono">012000000</div>
+          </div>
+          <button id="logoutBtn" type="button" title="Switch Account / Logout" class="ml-1 px-2.5 py-1 rounded-lg bg-slate-700 hover:bg-rose-600 text-[11px] font-semibold text-slate-200 hover:text-white transition">
+            Switch
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Sub-bar: Active Date, Privacy Mode Notice & Quick Date Chips -->
+    <div class="bg-slate-950/90 border-t border-slate-800/80 px-4 sm:px-6 py-2">
+      <div class="max-w-[1600px] mx-auto flex flex-wrap items-center justify-between gap-2 text-xs">
+        <div class="flex flex-wrap items-center gap-2">
+          <span class="text-slate-400">Viewing Date:</span>
+          <span id="activeDateDisplay" class="font-bold text-teal-300 bg-teal-500/10 border border-teal-500/30 px-2.5 py-0.5 rounded-lg">Thu, Oct 15, 2026</span>
+          <span id="sundayWarningBadge" class="hidden font-bold text-rose-300 bg-rose-500/20 border border-rose-500/40 px-2.5 py-0.5 rounded-lg">
+            Sunday Closed: OR operates Monday through Saturday only
+          </span>
+          <span class="text-slate-600 hidden sm:inline">|</span>
+          <span class="text-slate-400 text-[11px]">Dates with Bookings:</span>
+          <div id="bookedDatesQuickBar" class="flex flex-wrap items-center gap-1.5">
+            <!-- Populated by JS -->
+          </div>
+        </div>
+        <div id="privacyRuleBanner" class="text-[11px] text-amber-300 font-medium">
+          <!-- Shows current role visibility status -->
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- ===================================================================== -->
+  <!-- MAIN WORKSPACE                                                        -->
+  <!-- ===================================================================== -->
+  <main class="flex-1 max-w-[1600px] w-full mx-auto px-4 sm:px-6 py-5 space-y-5">
+
+    <!-- Q10: 4 Requested Dashboard KPI Cards -->
+    <section class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <!-- KPI 1: Bookings Today -->
+      <div class="bg-white rounded-2xl p-4 border border-slate-200/80 shadow-sm flex items-center justify-between">
+        <div>
+          <p class="text-xs font-bold text-slate-500">Bookings on Date</p>
+          <p id="kpiTodayCases" class="text-2xl font-extrabold text-slate-900 mt-1">0 Cases</p>
+          <p id="kpiTodayBreakdown" class="text-xs text-slate-500 mt-0.5">Morning 0 • Afternoon 0</p>
+        </div>
+        <div class="w-11 h-11 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+        </div>
+      </div>
+
+      <!-- KPI 2: Available Surgical Beds -->
+      <div class="bg-white rounded-2xl p-4 border border-slate-200/80 shadow-sm flex items-center justify-between">
+        <div>
+          <p class="text-xs font-bold text-slate-500">Available Surgical Beds</p>
+          <p id="kpiAvailableBeds" class="text-2xl font-extrabold text-teal-600 mt-1">2 Beds</p>
+          <p id="kpiBedNames" class="text-xs text-slate-600 font-medium mt-0.5">Bed A Zeiss • Bed B Leica</p>
+        </div>
+        <div class="w-11 h-11 rounded-2xl bg-teal-50 text-teal-600 flex items-center justify-center">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+        </div>
+      </div>
+
+      <!-- KPI 3: Booked Hours -->
+      <div class="bg-white rounded-2xl p-4 border border-slate-200/80 shadow-sm flex items-center justify-between">
+        <div>
+          <p class="text-xs font-bold text-slate-500">Booked Hours</p>
+          <p id="kpiBookedHours" class="text-2xl font-extrabold text-slate-900 mt-1">0.0 Hours</p>
+          <p id="kpiRemainingHours" class="text-xs text-emerald-600 font-medium mt-0.5">Capacity 12.0h/day (2 beds)</p>
+        </div>
+        <div class="w-11 h-11 rounded-2xl bg-amber-50 text-amber-600 flex items-center justify-center">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+        </div>
+      </div>
+
+      <!-- KPI 4: Utilization Rate -->
+      <div class="bg-white rounded-2xl p-4 border border-slate-200/80 shadow-sm flex items-center justify-between">
+        <div>
+          <p class="text-xs font-bold text-slate-500">Utilization Rate</p>
+          <p id="kpiUtilizationPct" class="text-2xl font-extrabold text-indigo-600 mt-1">0%</p>
+          <p id="kpiUtilizationSub" class="text-xs text-slate-500 mt-0.5">08:00–11:00 &amp; 14:00–17:00</p>
+        </div>
+        <div class="w-11 h-11 rounded-2xl bg-indigo-50 text-indigo-600 flex items-center justify-center">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 3.055A9.001 9.001 0 1020.945 13H11V3.055z"/></svg>
+        </div>
+      </div>
+    </section>
+
+    <!-- Primary Module Navigation Tabs + Filters & Role-Scoped Search -->
+    <section class="bg-white rounded-2xl p-4 border border-slate-200/80 shadow-sm space-y-3.5">
+      <div class="flex flex-wrap items-center justify-between gap-3">
+        <!-- Main Module Tabs -->
+        <div class="flex flex-wrap items-center gap-1.5 bg-slate-100 p-1.5 rounded-xl">
+          <button type="button" data-main-tab="calendar" class="main-tab-btn px-3.5 py-2 rounded-lg text-xs sm:text-sm font-bold bg-white text-slate-900 shadow-sm transition">
+            Calendar View
+          </button>
+          <button type="button" data-main-tab="profiles" class="main-tab-btn px-3.5 py-2 rounded-lg text-xs sm:text-sm font-bold text-slate-600 hover:text-slate-900 transition">
+            Surgeon Profiles &amp; Payouts
+          </button>
+          <button type="button" data-main-tab="analytics" class="main-tab-btn px-3.5 py-2 rounded-lg text-xs sm:text-sm font-bold text-slate-600 hover:text-slate-900 transition">
+            Statistics &amp; Revenue
+          </button>
+          <button type="button" data-main-tab="audit" class="main-tab-btn px-3.5 py-2 rounded-lg text-xs sm:text-sm font-bold text-slate-600 hover:text-slate-900 transition">
+            Audit Trail
+          </button>
+        </div>
+
+        <!-- Calendar Sub-View Switcher (Daily / Weekly / Monthly) -->
+        <div id="calendarModeContainer" class="flex items-center gap-1 bg-slate-100 p-1 rounded-xl">
+          <button type="button" data-cal-mode="daily" class="cal-mode-btn px-3 py-1.5 rounded-lg text-xs font-bold bg-teal-600 text-white shadow-xs transition">
+            Daily View
+          </button>
+          <button type="button" data-cal-mode="weekly" class="cal-mode-btn px-3 py-1.5 rounded-lg text-xs font-bold text-slate-600 hover:text-slate-900 transition">
+            Weekly (Mon–Sat)
+          </button>
+          <button type="button" data-cal-mode="monthly" class="cal-mode-btn px-3 py-1.5 rounded-lg text-xs font-bold text-slate-600 hover:text-slate-900 transition">
+            Monthly View
+          </button>
+        </div>
+      </div>
+
+      <!-- Filter & Search Bar (Q10) -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2.5 pt-2 border-t border-slate-100">
+        <!-- Authorized Search -->
+        <div class="relative">
+          <svg class="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+          </svg>
+          <input id="searchInput" type="text" placeholder="Search authorized records..." class="w-full pl-9 pr-3 py-2 text-xs sm:text-sm bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500 focus:bg-white transition" />
+        </div>
+
+        <!-- Bed Filter (A Zeiss / B Leica) -->
+        <select id="bedFilter" class="px-3 py-2 text-xs sm:text-sm bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500">
+          <option value="ALL">All Surgical Beds (Bed A Zeiss &amp; Bed B Leica)</option>
+          <option value="A Zeiss">Bed A Zeiss</option>
+          <option value="B Leica">Bed B Leica</option>
+        </select>
+
+        <!-- Surgery Type Filter -->
+        <select id="surgeryTypeFilter" class="px-3 py-2 text-xs sm:text-sm bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500">
+          <option value="ALL">All Surgery Types</option>
+          <option value="Pterygium">Pterygium Excision (30 mins)</option>
+          <option value="Cataract">Cataract (Phaco + IOL - 60 mins)</option>
+          <option value="Eyelid surgery">Eyelid Surgery (60 mins)</option>
+          <option value="Other surgery">Other Surgery (30 or 60 mins)</option>
+        </select>
+
+        <!-- Booking Status Filter -->
+        <select id="statusFilter" class="px-3 py-2 text-xs sm:text-sm bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500">
+          <option value="ALL">All Booking Statuses</option>
+          <option value="Confirmed">Confirmed</option>
+          <option value="In Surgery">In Surgery</option>
+          <option value="Completed">Completed</option>
+        </select>
+      </div>
+    </section>
+
+    <!-- ===================================================================== -->
+    <!-- TAB 1: CALENDAR VIEW (DAILY, WEEKLY, MONTHLY)                         -->
+    <!-- ===================================================================== -->
+    <div id="tabCalendarContent" class="grid grid-cols-1 xl:grid-cols-4 gap-5 items-start">
+      <div class="xl:col-span-3 space-y-5">
+
+        <!-- 1A. DAILY VIEW -->
+        <section id="dailyCalendarSection" class="bg-white rounded-2xl border border-slate-200/80 shadow-sm overflow-hidden">
+          <div class="px-5 py-3.5 border-b border-slate-200 flex flex-wrap items-center justify-between gap-3 bg-slate-50/70">
+            <div>
+              <div class="flex items-center gap-2">
+                <h2 class="text-sm sm:text-base font-extrabold text-slate-900">Daily Bed Schedule</h2>
+                <span id="dailyHeaderDateBadge" class="text-xs font-bold px-2.5 py-0.5 rounded-full bg-teal-100 text-teal-800">Thu, Oct 15, 2026</span>
+              </div>
+              <p class="text-xs text-slate-500 mt-0.5">
+                Morning: <strong>08:00 AM – 11:00 AM</strong> • Afternoon: <strong>02:00 PM – 05:00 PM (14:00–17:00)</strong> • Click any available slot to book
+              </p>
+            </div>
+            <!-- Legend -->
+            <div class="flex flex-wrap items-center gap-3 text-xs font-semibold">
+              <span class="inline-flex items-center gap-1.5"><span class="w-3 h-3 rounded bg-teal-600"></span>Your Case / Admin View</span>
+              <span class="inline-flex items-center gap-1.5"><span class="w-3 h-3 rounded bg-slate-500"></span>Bed Occupied (Confidential)</span>
+              <span class="inline-flex items-center gap-1.5"><span class="w-3 h-3 rounded border border-dashed border-emerald-400 bg-emerald-50"></span>Available</span>
+            </div>
+          </div>
+
+          <!-- Morning & Afternoon Slot Timelines for Bed A Zeiss & Bed B Leica -->
+          <div id="dailyScheduleContainer" class="p-5 space-y-6">
+            <!-- Populated by JS -->
+          </div>
+
+          <!-- Authorized Roster List for Selected Date -->
+          <div class="border-t border-slate-200">
+            <div class="px-5 py-3 bg-slate-50 flex items-center justify-between">
+              <h3 class="text-xs sm:text-sm font-extrabold text-slate-800">Daily Surgical Roster (Role-Scoped Access)</h3>
+              <span id="dailyRosterCountBadge" class="text-xs font-bold px-2.5 py-0.5 rounded-full bg-slate-200 text-slate-700">0 Cases</span>
+            </div>
+            <div class="overflow-x-auto">
+              <table class="w-full text-left border-collapse">
+                <thead>
+                  <tr class="border-b border-slate-200 text-[11px] font-bold text-slate-500 uppercase bg-slate-50/60">
+                    <th class="py-2.5 px-4">Time &amp; Surgical Bed</th>
+                    <th class="py-2.5 px-4">Patient &amp; Link ID</th>
+                    <th class="py-2.5 px-4">Procedure &amp; Eye</th>
+                    <th class="py-2.5 px-4">Eye Surgeon</th>
+                    <th class="py-2.5 px-4">Pre-Op Preparation Notes</th>
+                    <th class="py-2.5 px-4">Status</th>
+                    <th class="py-2.5 px-4 text-right">Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="dailyRosterTableBody" class="divide-y divide-slate-200 text-xs">
+                  <!-- Populated by JS -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+        <!-- 1B. WEEKLY VIEW (Mon - Sat) -->
+        <section id="weeklyCalendarSection" class="hidden bg-white rounded-2xl border border-slate-200/80 shadow-sm overflow-hidden">
+          <div class="px-5 py-3.5 border-b border-slate-200 flex flex-wrap items-center justify-between gap-3 bg-slate-50/70">
+            <div>
+              <h2 class="text-sm sm:text-base font-extrabold text-slate-900">Weekly Schedule (Monday to Saturday)</h2>
+              <p id="weeklyRangeSubtitle" class="text-xs text-slate-500">Live timeline across Bed A Zeiss and Bed B Leica</p>
+            </div>
+          </div>
+          <div id="weeklyGridContainer" class="p-4 overflow-x-auto custom-scroll">
+            <!-- Populated by JS -->
+          </div>
+        </section>
+
+        <!-- 1C. MONTHLY VIEW -->
+        <section id="monthlyCalendarSection" class="hidden bg-white rounded-2xl border border-slate-200/80 shadow-sm overflow-hidden">
+          <div class="px-5 py-3.5 border-b border-slate-200 flex flex-wrap items-center justify-between gap-3 bg-slate-50/70">
+            <div>
+              <h2 id="monthlyHeaderTitle" class="text-sm sm:text-base font-extrabold text-slate-900">Monthly Calendar View</h2>
+              <p class="text-xs text-slate-500">Click any operational date to view or book slots (Sundays Closed)</p>
+            </div>
+            <div class="flex items-center gap-2">
+              <button type="button" id="prevMonthBtn" class="px-3 py-1.5 rounded-lg text-xs font-bold bg-slate-200 hover:bg-slate-300 text-slate-700 transition">&larr; Previous Month</button>
+              <button type="button" id="nextMonthBtn" class="px-3 py-1.5 rounded-lg text-xs font-bold bg-slate-200 hover:bg-slate-300 text-slate-700 transition">Next Month &rarr;</button>
+            </div>
+          </div>
+          <div id="monthlyGridContainer" class="p-4">
+            <!-- Populated by JS -->
+          </div>
+        </section>
+
+      </div>
+
+      <!-- Right Sidebar: Rules, Auto-Slot Finder & Privacy Guide -->
+      <aside class="space-y-4">
+        <!-- Quick Available Slot Recommendation Card (Q5) -->
+        <div class="bg-white rounded-2xl p-4 border border-slate-200/80 shadow-sm">
+          <div class="flex items-center justify-between mb-2">
+            <h3 class="text-sm font-extrabold text-slate-900">Smart Available Slots</h3>
+            <span class="text-[11px] font-bold text-teal-700 bg-teal-50 px-2 py-0.5 rounded-full border border-teal-200">Q5 Auto-Suggest</span>
+          </div>
+          <p class="text-xs text-slate-500 mb-3">Open 60-min slots for <span id="sidebarQuickDateLabel" class="font-semibold text-slate-700"></span>:</p>
+          <div id="sidebarAvailableSlotsList" class="space-y-2 max-h-64 overflow-y-auto pr-1">
+            <!-- Populated by JS -->
+          </div>
+        </div>
+
+        <!-- Booking Rules & Policy Card (Q3, Q4, Q11) -->
+        <div class="bg-gradient-to-br from-slate-900 to-slate-800 text-white rounded-2xl p-4 shadow-sm space-y-3">
+          <div class="flex items-center justify-between">
+            <h3 class="text-sm font-extrabold text-teal-300">OR Booking Policies</h3>
+            <span class="text-[10px] bg-slate-700 px-2 py-0.5 rounded text-slate-300">Q3 • Q4 • Q11</span>
+          </div>
+          <ul class="text-xs text-slate-300 space-y-1.5 leading-relaxed">
+            <li>• <strong>Operating Days:</strong> Monday through Saturday (Closed Sundays)</li>
+            <li>• <strong>Operating Hours:</strong> 08:00–11:00 AM | 02:00–05:00 PM</li>
+            <li>• <strong>Surgical Beds:</strong> <span class="text-teal-300 font-semibold">Bed A Zeiss</span> and <span class="text-indigo-300 font-semibold">Bed B Leica</span></li>
+            <li>• <strong>Advance Notice (Doctors):</strong> Minimum <strong>&gt; 2 days</strong> before surgery</li>
+            <li>• <strong>Cancellation Deadline:</strong> Cannot cancel within <strong>&lt; 1 day</strong> (Admin override only)</li>
+          </ul>
+          <!-- Admin toggle to enforce or relax >2 days rule during testing -->
+          <div id="adminRuleOverrideBox" class="hidden pt-2 border-t border-slate-700">
+            <label class="flex items-center gap-2 text-xs text-amber-300 cursor-pointer">
+              <input id="enforceLeadTimeCheckbox" type="checkbox" checked class="rounded text-teal-500 focus:ring-0" />
+              <span>Enforce &gt;2 days advance booking &amp; &lt;1 day lock</span>
+            </label>
+          </div>
+        </div>
+
+        <!-- Standard Duration Table (Q4) -->
+        <div class="bg-white rounded-2xl p-4 border border-slate-200/80 shadow-sm">
+          <h3 class="text-xs font-extrabold text-slate-800 uppercase tracking-wider mb-2.5">Standard Surgery Durations (Q4)</h3>
+          <div class="divide-y divide-slate-100 text-xs">
+            <div class="py-1.5 flex justify-between"><span>Pterygium Excision</span><span class="font-bold text-teal-700">30 Mins</span></div>
+            <div class="py-1.5 flex justify-between"><span>Cataract (Phaco + IOL)</span><span class="font-bold text-blue-700">60 Mins</span></div>
+            <div class="py-1.5 flex justify-between"><span>Eyelid Surgery</span><span class="font-bold text-indigo-700">60 Mins</span></div>
+            <div class="py-1.5 flex justify-between"><span>Other Ophthalmic Surgery</span><span class="font-bold text-purple-700">30 or 60 Mins</span></div>
+          </div>
+        </div>
+      </aside>
+    </div>
+
+    <!-- ===================================================================== -->
+    <!-- TAB 2: EYE SURGEON PROFILE & PAYOUT SETTLEMENT (Q8 & Q9)              -->
+    <!-- ===================================================================== -->
+    <div id="tabProfilesContent" class="hidden space-y-5">
+      <!-- Top Bar: Select Doctor (for Admin) + Add New Approved Doctor Button -->
+      <div class="bg-white rounded-2xl p-4 border border-slate-200/80 shadow-sm flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <h2 class="text-base font-extrabold text-slate-900">Eye Surgeon Profiles &amp; Payout Settlements</h2>
+          <p class="text-xs text-slate-500">PPEC collects patient surgical fees and remits negotiated % shares to eye surgeons (Q8 &amp; Q9)</p>
+        </div>
+        <div class="flex flex-wrap items-center gap-2.5">
+          <div id="adminDoctorSelectorWrap" class="flex items-center gap-2">
+            <label class="text-xs font-bold text-slate-600">Select Surgeon:</label>
+            <select id="profileDoctorSelect" class="px-3 py-2 text-xs sm:text-sm bg-slate-50 border border-slate-300 rounded-xl font-semibold focus:outline-none focus:ring-2 focus:ring-teal-500">
+              <!-- Populated by JS -->
+            </select>
+          </div>
+          <button id="addDoctorModalBtn" type="button" class="hidden px-3.5 py-2 rounded-xl text-xs sm:text-sm font-bold bg-teal-600 hover:bg-teal-500 text-white shadow-sm transition">
+            + Approve New Surgeon Account
+          </button>
+        </div>
+      </div>
+
+      <!-- Selected Surgeon Profile Card (All 10 items from Q8) -->
+      <div id="surgeonProfileDetailCard" class="bg-white rounded-2xl border border-slate-200/80 shadow-sm p-5">
+        <!-- Populated by JS -->
+      </div>
+
+      <!-- Surgeon Payout Table & Paid-Date Filter (Q8 & Q9: tick on Paid Date + filter) -->
+      <div class="bg-white rounded-2xl border border-slate-200/80 shadow-sm overflow-hidden">
+        <div class="p-4 border-b border-slate-200 bg-slate-50/70 flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <h3 class="text-sm sm:text-base font-extrabold text-slate-900">Surgeon Payout &amp; Settlement Ledger</h3>
+            <p class="text-xs text-slate-500">Tick cases when paid out to record the settlement date, and filter by payment status</p>
+          </div>
+
+          <!-- Payout Filters (Q8 Filter Option) -->
+          <div class="flex flex-wrap items-center gap-2">
+            <select id="payoutStatusFilter" class="px-3 py-1.5 text-xs font-semibold bg-white border border-slate-300 rounded-xl">
+              <option value="ALL">All Payout Statuses</option>
+              <option value="PAID">Paid Only</option>
+              <option value="UNPAID">Unpaid Only</option>
+            </select>
+
+            <div class="flex items-center gap-1.5 bg-white border border-slate-300 rounded-xl px-2.5 py-1">
+              <span class="text-[11px] font-semibold text-slate-500">Paid Date:</span>
+              <input id="payoutPaidDateFilter" type="date" class="text-xs font-semibold focus:outline-none" />
+              <button type="button" id="clearPaidDateFilterBtn" class="text-[11px] text-rose-600 hover:underline font-semibold">Reset</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="overflow-x-auto">
+          <table class="w-full text-left border-collapse">
+            <thead>
+              <tr class="border-b border-slate-200 text-[11px] font-bold text-slate-500 uppercase bg-slate-50">
+                <th class="py-3 px-4">Surgery Date &amp; Bed</th>
+                <th class="py-3 px-4">Eye Surgeon</th>
+                <th class="py-3 px-4">Patient &amp; Procedure</th>
+                <th class="py-3 px-4 text-right">Total Fee (PPEC Collected)</th>
+                <th class="py-3 px-4 text-right">Surgeon %</th>
+                <th class="py-3 px-4 text-right">Doctor Payout Amount</th>
+                <th class="py-3 px-4 text-center">Tick Paid</th>
+                <th class="py-3 px-4">Settlement Paid Date</th>
+              </tr>
+            </thead>
+            <tbody id="payoutTableBody" class="divide-y divide-slate-200 text-xs">
+              <!-- Populated by JS -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===================================================================== -->
+    <!-- TAB 3: STATISTICS & REVENUE ANALYTICS (Q10)                           -->
+    <!-- ===================================================================== -->
+    <div id="tabAnalyticsContent" class="hidden space-y-5">
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-5">
+        <!-- Cases & Revenue by Surgeon -->
+        <div class="bg-white rounded-2xl border border-slate-200/80 shadow-sm p-5">
+          <h3 class="text-sm sm:text-base font-extrabold text-slate-900 mb-1">Performance &amp; Revenue by Eye Surgeon</h3>
+          <p class="text-xs text-slate-500 mb-4">Total cases, operating hours utilized, gross revenue, and doctor payout shares</p>
+          <div id="statsByDoctorContainer" class="space-y-3">
+            <!-- Populated by JS -->
+          </div>
+        </div>
+
+        <!-- Cases by Surgery Type -->
+        <div class="bg-white rounded-2xl border border-slate-200/80 shadow-sm p-5">
+          <h3 class="text-sm sm:text-base font-extrabold text-slate-900 mb-1">Case Volume by Surgery Type</h3>
+          <p class="text-xs text-slate-500 mb-4">Pterygium (30m), Cataract (60m), Eyelid surgery (60m), and Other procedures</p>
+          <div id="statsByProcedureContainer" class="space-y-3">
+            <!-- Populated by JS -->
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===================================================================== -->
+    <!-- TAB 4: AUDIT TRAIL LOG (Q11: Modification and Cancellation Records)    -->
+    <!-- ===================================================================== -->
+    <div id="tabAuditContent" class="hidden bg-white rounded-2xl border border-slate-200/80 shadow-sm overflow-hidden">
+      <div class="px-5 py-4 border-b border-slate-200 bg-slate-50/70 flex items-center justify-between">
+        <div>
+          <h2 class="text-sm sm:text-base font-extrabold text-slate-900">Operating Room Booking Audit Trail (Q11)</h2>
+          <p class="text-xs text-slate-500">Immutable chronological record of all booking creations, schedule updates, cancellations, and payouts</p>
+        </div>
+      </div>
+      <div class="divide-y divide-slate-200 max-h-[540px] overflow-y-auto" id="auditLogListContainer">
+        <!-- Populated by JS -->
+      </div>
+    </div>
+
+  </main>
+
+  <!-- ===================================================================== -->
+  <!-- MODAL 1: BOOK / EDIT OPERATING ROOM SLOT (Q3, Q4, Q5, Q6, Q11)        -->
+  <!-- ===================================================================== -->
+  <div id="bookingModal" class="fixed inset-0 z-50 hidden bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 overflow-y-auto">
+    <div class="bg-white rounded-2xl max-w-2xl w-full border border-slate-200 shadow-2xl overflow-hidden my-8">
+      <!-- Modal Header -->
+      <div class="px-6 py-4 bg-slate-900 text-white flex items-center justify-between">
+        <div>
+          <h3 id="bookingModalTitle" class="text-base sm:text-lg font-extrabold">Book Eye Operating Bed</h3>
+          <p class="text-xs text-slate-400">Hours: Mon–Sat (08:00–11:00 AM | 02:00–05:00 PM) • Bed A Zeiss &amp; Bed B Leica</p>
+        </div>
+        <button id="closeBookingModalBtn" type="button" class="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+        </button>
+      </div>
+
+      <!-- Alert Banner inside Modal -->
+      <div id="bookingAlertBanner" class="hidden px-6 py-3 bg-rose-50 border-b border-rose-200 text-rose-700 text-xs font-bold flex items-center gap-2">
+        <svg class="w-4 h-4 shrink-0 text-rose-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+        </svg>
+        <span id="bookingAlertText">Booking validation error.</span>
+      </div>
+
+      <form id="bookingForm" class="p-6 space-y-4 max-h-[82vh] overflow-y-auto">
+        <input type="hidden" id="editingBookingId" value="" />
+
+        <!-- Auto-Suggested Free Slots Box (Q5) -->
+        <div class="p-3.5 rounded-2xl bg-teal-50/80 border border-teal-200">
+          <div class="flex items-center justify-between mb-1.5">
+            <span class="text-xs font-extrabold text-teal-900">Auto-Suggested Available Slots (Q5):</span>
+            <span class="text-[11px] font-semibold text-teal-700">Click to Select Bed &amp; Time</span>
+          </div>
+          <div id="modalSuggestedSlotsContainer" class="flex flex-wrap gap-1.5">
+            <!-- Populated dynamically by JS -->
+          </div>
+        </div>
+
+        <!-- Row 1: Date, Surgical Bed (A Zeiss / B Leica), Start Time -->
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3.5">
+          <div>
+            <label class="block text-xs font-bold text-slate-700 mb-1">Surgery Date (Mon–Sat) *</label>
+            <input id="formDate" type="date" required class="w-full px-3 py-2 text-sm border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500" />
+          </div>
+
+          <div>
+            <label class="block text-xs font-bold text-slate-700 mb-1">Select Surgical Bed *</label>
+            <select id="formBed" required class="w-full px-3 py-2 text-sm border border-slate-300 rounded-xl font-semibold focus:outline-none focus:ring-2 focus:ring-teal-500">
+              <option value="A Zeiss">Bed A Zeiss</option>
+              <option value="B Leica">Bed B Leica</option>
+            </select>
+          </div>
+
+          <div>
+            <label class="block text-xs font-bold text-slate-700 mb-1">Start Time *</label>
+            <select id="formStartHour" required class="w-full px-3 py-2 text-sm border border-slate-300 rounded-xl font-semibold focus:outline-none focus:ring-2 focus:ring-teal-500">
+              <optgroup label="Morning Session (08:00 AM – 11:00 AM)">
+                <option value="8">08:00 AM</option>
+                <option value="8.5">08:30 AM</option>
+                <option value="9">09:00 AM</option>
+                <option value="9.5">09:30 AM</option>
+                <option value="10">10:00 AM</option>
+                <option value="10.5">10:30 AM</option>
+              </optgroup>
+              <optgroup label="Afternoon Session (02:00 PM – 05:00 PM)">
+                <option value="14">02:00 PM (14:00)</option>
+                <option value="14.5">02:30 PM (14:30)</option>
+                <option value="15">03:00 PM (15:00)</option>
+                <option value="15.5">03:30 PM (15:30)</option>
+                <option value="16">04:00 PM (16:00)</option>
+                <option value="16.5">04:30 PM (16:30)</option>
+              </optgroup>
+            </select>
+          </div>
+        </div>
+
+        <!-- Row 2: Surgery Type & Automatic Duration (Q4) + Eye Side (Q6) -->
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3.5">
+          <div>
+            <label class="block text-xs font-bold text-slate-700 mb-1">Surgery Type *</label>
+            <select id="formSurgeryType" required class="w-full px-3 py-2 text-sm border border-slate-300 rounded-xl font-semibold focus:outline-none focus:ring-2 focus:ring-teal-500">
+              <option value="Pterygium">Pterygium Excision (30 mins)</option>
+              <option value="Cataract">Cataract (Phaco + IOL - 60 mins)</option>
+              <option value="Eyelid surgery">Eyelid Surgery (60 mins)</option>
+              <option value="Other surgery">Other Surgery</option>
+            </select>
+          </div>
+
+          <div>
+            <label class="block text-xs font-bold text-slate-700 mb-1">Duration (Q4 Standard) *</label>
+            <select id="formDurationMinutes" required class="w-full px-3 py-2 text-sm border border-slate-300 rounded-xl font-semibold bg-slate-50 focus:outline-none focus:ring-2 focus:ring-teal-500">
+              <option value="30">30 Minutes (0.5 hour)</option>
+              <option value="60">60 Minutes (1.0 hour)</option>
+            </select>
+          </div>
+
+          <div>
+            <label class="block text-xs font-bold text-slate-700 mb-1">Operative Eye (Q6) *</label>
+            <select id="formEyeSide" required class="w-full px-3 py-2 text-sm border border-slate-300 rounded-xl font-semibold focus:outline-none focus:ring-2 focus:ring-teal-500">
+              <option value="RE">Right Eye (RE / OD)</option>
+              <option value="LE">Left Eye (LE / OS)</option>
+              <option value="BE">Both Eyes (BE / OU)</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Row 3: Patient Link ID, Patient Name, Patient Phone (* required) (Q6) -->
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3.5">
+          <div class="sm:col-span-3">
+            <label class="block text-xs font-bold text-slate-700 mb-1">Patient Portal Link / ID (Q6) *</label>
+            <input id="formPatientLink" type="text" required placeholder="https://ppec.pethyoeung.com/backend/patient/11016" class="w-full px-3 py-2 text-sm border border-slate-300 rounded-xl font-mono focus:outline-none focus:ring-2 focus:ring-teal-500" />
+          </div>
+
+          <div>
+            <label class="block text-xs font-bold text-slate-700 mb-1">Patient Full Name *</label>
+            <input id="formPatientName" type="text" required placeholder="e.g. Sokha Chan" class="w-full px-3 py-2 text-sm border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500" />
+          </div>
+
+          <div>
+            <label class="block text-xs font-bold text-rose-700 mb-1">Patient Phone Number (* Required) *</label>
+            <input id="formPatientPhone" type="tel" required placeholder="e.g. 012 345 678" class="w-full px-3 py-2 text-sm border border-rose-300 bg-rose-50/30 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500" />
+          </div>
+
+          <div>
+            <label class="block text-xs font-bold text-slate-700 mb-1">Total Surgery Fee (USD - for % payout)</label>
+            <input id="formTotalFee" type="number" min="0" step="10" required value="500" class="w-full px-3 py-2 text-sm border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500" />
+          </div>
+        </div>
+
+        <!-- Row 4: Booking Doctor & Status -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+          <div>
+            <label class="block text-xs font-bold text-slate-700 mb-1">Eye Surgeon *</label>
+            <select id="formDoctorId" required class="w-full px-3 py-2 text-sm border border-slate-300 rounded-xl font-semibold focus:outline-none focus:ring-2 focus:ring-teal-500">
+              <!-- Populated by JS -->
+            </select>
+          </div>
+
+          <div>
+            <label class="block text-xs font-bold text-slate-700 mb-1">Booking Status *</label>
+            <select id="formStatus" required class="w-full px-3 py-2 text-sm border border-slate-300 rounded-xl font-semibold focus:outline-none focus:ring-2 focus:ring-teal-500">
+              <option value="Confirmed">Confirmed</option>
+              <option value="In Surgery">In Surgery</option>
+              <option value="Completed">Completed</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Row 5: Preparation Notes -->
+        <div>
+          <label class="block text-xs font-bold text-slate-700 mb-1">Pre-Operative Preparation &amp; IOL Power Notes</label>
+          <textarea id="formNotes" rows="2" placeholder="e.g. Prepare Alcon Toric IOL +21.5D, patient on antihypertensive medication..." class="w-full px-3 py-2 text-sm border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500"></textarea>
+        </div>
+
+        <!-- Modal Footer -->
+        <div class="pt-3 border-t border-slate-200 flex flex-wrap items-center justify-between gap-3">
+          <button type="button" id="deleteBookingBtn" class="hidden px-3.5 py-2 rounded-xl text-xs font-bold bg-rose-50 text-rose-600 hover:bg-rose-100 border border-rose-200 transition">
+            Cancel Booking
+          </button>
+          <div class="flex items-center gap-2 ml-auto">
+            <button type="button" id="cancelBookingModalBtn" class="px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold bg-slate-100 text-slate-700 hover:bg-slate-200 transition">
+              Close
+            </button>
+            <button type="submit" class="px-5 py-2 rounded-xl text-xs sm:text-sm font-bold bg-teal-600 hover:bg-teal-500 text-white shadow-sm transition">
+              Save Booking
+            </button>
+          </div>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ===================================================================== -->
+  <!-- MODAL 2: ADMIN CREATE / EDIT EYE SURGEON PROFILE (Q1, Q2, Q8, Q9)     -->
+  <!-- ===================================================================== -->
+  <div id="doctorProfileModal" class="fixed inset-0 z-50 hidden bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 overflow-y-auto">
+    <div class="bg-white rounded-2xl max-w-2xl w-full border border-slate-200 shadow-2xl overflow-hidden my-8">
+      <div class="px-6 py-4 bg-slate-900 text-white flex items-center justify-between">
+        <div>
+          <h3 id="doctorModalTitle" class="text-base sm:text-lg font-extrabold">Approve / Configure Eye Surgeon Profile</h3>
+          <p class="text-xs text-slate-400">Save once to create the Firebase account and profile, then email a password setup link.</p>
+        </div>
+        <button id="closeDoctorModalBtn" type="button" class="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+        </button>
+      </div>
+
+      <form id="doctorProfileForm" class="p-6 space-y-4 max-h-[80vh] overflow-y-auto">
+        <input type="hidden" id="editDoctorInternalId" value="" />
+
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3.5">
+          <div class="sm:col-span-2">
+            <label class="block text-xs font-bold text-slate-700 mb-1">Doctor Full Name *</label>
+            <input id="docNameInput" type="text" required placeholder="e.g. Dr. Vannak Heng" class="w-full px-3 py-2 text-sm border border-slate-300 rounded-xl" />
+          </div>
+          <div>
+            <label class="block text-xs font-bold text-slate-700 mb-1">Doctor ID *</label>
+            <input id="docCodeInput" type="text" required placeholder="DR-PPEC-004" class="w-full px-3 py-2 text-sm border border-slate-300 rounded-xl font-mono" />
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3.5">
+          <div>
+            <label class="block text-xs font-bold text-slate-700 mb-1">Login Phone Number *</label>
+            <input id="docPhoneInput" type="text" required placeholder="012888004" class="w-full px-3 py-2 text-sm border border-slate-300 rounded-xl font-mono" />
+          </div>
+          <div>
+            <label class="block text-xs font-bold text-slate-700 mb-1">Email *</label>
+            <input id="docEmailInput" type="email" required placeholder="doctor@ppec.com" class="w-full px-3 py-2 text-sm border border-slate-300 rounded-xl" />
+          </div>
+          <div class="flex items-center text-xs text-slate-600">
+            A new Firebase account will be created for this email. The doctor sets their password from the email link.
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+          <div>
+            <label class="block text-xs font-bold text-slate-700 mb-1">Medical License Number *</label>
+            <input id="docLicenseInput" type="text" required placeholder="MCC-OPH-2019-884" class="w-full px-3 py-2 text-sm border border-slate-300 rounded-xl" />
+          </div>
+          <div>
+            <label class="block text-xs font-bold text-slate-700 mb-1">Issuing Licensing Authority *</label>
+            <input id="docAuthorityInput" type="text" required value="Medical Council of Cambodia (MCC)" class="w-full px-3 py-2 text-sm border border-slate-300 rounded-xl" />
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+          <div>
+            <label class="block text-xs font-bold text-slate-700 mb-1">Primary Clinic or Hospital *</label>
+            <input id="docClinicInput" type="text" required placeholder="PPEC Eye Center &amp; Preah Ang Duong Hospital" class="w-full px-3 py-2 text-sm border border-slate-300 rounded-xl" />
+          </div>
+          <div>
+            <label class="block text-xs font-bold text-slate-700 mb-1">Qualified Surgical Procedures *</label>
+            <input id="docCapabilitiesInput" type="text" required value="Cataract, Pterygium, Eyelid surgery, Other surgery" class="w-full px-3 py-2 text-sm border border-slate-300 rounded-xl" />
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3.5">
+          <div>
+            <label class="block text-xs font-bold text-teal-800 mb-1">Surgeon Share (% of Total Fee) *</label>
+            <input id="docSharePctInput" type="number" min="1" max="100" required value="70" class="w-full px-3 py-2 text-sm border border-teal-400 bg-teal-50/40 rounded-xl font-extrabold text-teal-900" />
+          </div>
+          <div>
+            <label class="block text-xs font-bold text-slate-700 mb-1">Payout Method &amp; Account Details *</label>
+            <input id="docBankInput" type="text" required placeholder="ABA Bank • 001 998 221 (USD)" class="w-full px-3 py-2 text-sm border border-slate-300 rounded-xl" />
+          </div>
+          <div>
+            <label class="block text-xs font-bold text-slate-700 mb-1">Account Approval Status *</label>
+            <select id="docStatusInput" class="w-full px-3 py-2 text-sm border border-slate-300 rounded-xl font-semibold">
+              <option value="Approved">Approved (Active)</option>
+              <option value="Suspended">Suspended</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="pt-3 border-t border-slate-200 flex items-center justify-end gap-2">
+          <button type="button" id="cancelDoctorModalBtn" class="px-4 py-2 rounded-xl text-xs font-semibold bg-slate-100 text-slate-700 hover:bg-slate-200 transition">Cancel</button>
+          <button type="submit" class="px-5 py-2 rounded-xl text-xs font-bold bg-teal-600 hover:bg-teal-500 text-white shadow-sm transition">Save Surgeon Profile</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Toast Notification -->
+  <div id="toastBanner" class="fixed bottom-5 right-5 z-50 hidden bg-slate-900 text-white px-4 py-3 rounded-xl shadow-xl border border-slate-700 text-xs sm:text-sm font-medium flex items-center gap-2.5">
+    <span class="w-2.5 h-2.5 rounded-full bg-teal-400"></span>
+    <span id="toastMessage">Changes saved successfully.</span>
+  </div>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+    import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, deleteUser, signOut, updatePassword, sendPasswordResetEmail } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+    import { getFirestore, doc, getDoc, setDoc, runTransaction, deleteDoc, onSnapshot, collection, query, where } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+    import { deleteApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+
+    // =========================================================================
+    // CONSTANTS & OPERATING ROOM CONFIGURATION (Q3 & Q4)
+    // =========================================================================
+    const DEFAULT_TODAY = '2026-10-15'; // Thursday, Oct 15, 2026
+    const SURGICAL_BEDS = [
+      { id: 'A Zeiss', name: 'Bed A Zeiss', microscope: 'Zeiss Lumera Microscope Suite', color: 'teal' },
+      { id: 'B Leica', name: 'Bed B Leica', microscope: 'Leica Proveo Ophthalmic Suite', color: 'indigo' }
+    ];
+
+    // Morning: 8:00 - 11:00 (3h = six 30-min slots)
+    // Afternoon: 14:00 - 17:00 (2:00 PM - 5:00 PM, 3h = six 30-min slots)
+    const MORNING_SLOTS = [8.0, 8.5, 9.0, 9.5, 10.0, 10.5];
+    const AFTERNOON_SLOTS = [14.0, 14.5, 15.0, 15.5, 16.0, 16.5];
+    const ALL_DAILY_SLOTS = [...MORNING_SLOTS, ...AFTERNOON_SLOTS];
+
+    const SURGERY_TYPES = {
+      'Pterygium': { label: 'Pterygium Excision', defaultMinutes: 30, defaultFee: 250 },
+      'Cataract': { label: 'Cataract (Phaco + IOL)', defaultMinutes: 60, defaultFee: 650 },
+      'Eyelid surgery': { label: 'Eyelid Surgery', defaultMinutes: 60, defaultFee: 450 },
+      'Other surgery': { label: 'Other Ophthalmic Surgery', defaultMinutes: 60, defaultFee: 400 }
+    };
+
+    // =========================================================================
+    // SEED APPROVED DOCTORS & ADMIN ACCOUNT (Q1, Q2, Q8, Q9)
+    // =========================================================================
+    const INITIAL_USERS = [
+      {
+        id: 'ADMIN-01',
+        role: 'ADMIN',
+        doctorCode: 'ADMIN-PPEC',
+        name: 'PPEC OR Admin (Surgical Coordinator)',
+        phone: '012000000',
+        email: 'admin@ppec.pethyoeung.com',
+        mustChangePassword: false,
+        status: 'Approved',
+        avatar: 'https://placehold.co/120x120/0f766e/ffffff?text=ADMIN'
+      },
+      {
+        id: 'DOC-01',
+        role: 'DOCTOR',
+        doctorCode: 'DR-PPEC-001',
+        name: 'Dr. Vannak Heng',
+        phone: '012888001',
+        email: 'vannak.heng@ppec.com',
+        mustChangePassword: true,
+        licenseNumber: 'MCC-OPH-2016-0142',
+        licenseAuthority: 'Medical Council of Cambodia (MCC)',
+        clinic: 'PPEC Eye Center & Preah Ang Duong Hospital',
+        capabilities: 'Cataract, Pterygium, Eyelid surgery, Other surgery',
+        createdAt: '2025-01-10',
+        status: 'Approved',
+        sharePct: 70,
+        paymentMethod: 'ABA Bank • 001 445 889 (HENG VANNAK - USD)',
+        avatar: 'https://placehold.co/120x120/0d9488/ffffff?text=VH'
+      },
+      {
+        id: 'DOC-02',
+        role: 'DOCTOR',
+        doctorCode: 'DR-PPEC-002',
+        name: 'Dr. Channary Ly',
+        phone: '012888002',
+        email: 'channary.ly@ppec.com',
+        mustChangePassword: true,
+        licenseNumber: 'MCC-OPH-2018-0319',
+        licenseAuthority: 'Medical Council of Cambodia (MCC)',
+        clinic: 'PPEC Eye Specialist Clinic Phnom Penh',
+        capabilities: 'Cataract, Eyelid surgery, Pterygium',
+        createdAt: '2025-03-22',
+        status: 'Approved',
+        sharePct: 65,
+        paymentMethod: 'ABA Bank • 002 771 334 (LY CHANNARY - USD)',
+        avatar: 'https://placehold.co/120x120/4f46e5/ffffff?text=CL'
+      },
+      {
+        id: 'DOC-03',
+        role: 'DOCTOR',
+        doctorCode: 'DR-PPEC-003',
+        name: 'Dr. Borey Prak',
+        phone: '012888003',
+        email: 'borey.prak@ppec.com',
+        mustChangePassword: true,
+        licenseNumber: 'MCC-OPH-2020-0511',
+        licenseAuthority: 'Medical Council of Cambodia (MCC)',
+        clinic: 'PPEC Ophthalmic Micro-Surgery Suite',
+        capabilities: 'Pterygium, Cataract, Other surgery',
+        createdAt: '2025-06-15',
+        status: 'Approved',
+        sharePct: 60,
+        paymentMethod: 'KHQR / ACLEDA • 092 881 102 (PRAK BOREY)',
+        avatar: 'https://placehold.co/120x120/0284c7/ffffff?text=BP'
+      }
+    ];
+
+    // =========================================================================
+    // SEED SURGICAL BOOKINGS
+    // =========================================================================
+    const INITIAL_BOOKINGS = [
+      // === TODAY: Thursday, 2026-10-15 ===
+      {
+        id: 'BK-1001',
+        date: '2026-10-15',
+        bed: 'A Zeiss',
+        startHour: 8.0,
+        durationMinutes: 60,
+        duration: 1.0,
+        patientLink: 'https://ppec.pethyoeung.com/backend/patient/11016',
+        patientName: 'Sokha Chan',
+        patientPhone: '012 334 556',
+        surgeryType: 'Cataract',
+        eyeSide: 'RE',
+        notes: 'Phaco + Toric IOL +21.0D, patient prepared',
+        doctorId: 'DOC-01',
+        doctorName: 'Dr. Vannak Heng',
+        status: 'Completed',
+        totalFee: 650,
+        paidStatus: 'PAID',
+        paidDate: '2026-10-15'
+      },
+      {
+        id: 'BK-1002',
+        date: '2026-10-15',
+        bed: 'A Zeiss',
+        startHour: 9.0,
+        durationMinutes: 30,
+        duration: 0.5,
+        patientLink: 'https://ppec.pethyoeung.com/backend/patient/11017',
+        patientName: 'Dara Meas',
+        patientPhone: '017 998 112',
+        surgeryType: 'Pterygium',
+        eyeSide: 'LE',
+        notes: 'Conjunctival autograft, topical anesthesia',
+        doctorId: 'DOC-01',
+        doctorName: 'Dr. Vannak Heng',
+        status: 'In Surgery',
+        totalFee: 250,
+        paidStatus: 'UNPAID',
+        paidDate: ''
+      },
+      {
+        id: 'BK-1003',
+        date: '2026-10-15',
+        bed: 'B Leica',
+        startHour: 8.5,
+        durationMinutes: 60,
+        duration: 1.0,
+        patientLink: 'https://ppec.pethyoeung.com/backend/patient/11018',
+        patientName: 'Sreyneang Kim',
+        patientPhone: '098 221 440',
+        surgeryType: 'Eyelid surgery',
+        eyeSide: 'BE',
+        notes: 'Upper blepharoplasty bilateral',
+        doctorId: 'DOC-02',
+        doctorName: 'Dr. Channary Ly',
+        status: 'In Surgery',
+        totalFee: 450,
+        paidStatus: 'PAID',
+        paidDate: '2026-10-15'
+      },
+      {
+        id: 'BK-1004',
+        date: '2026-10-15',
+        bed: 'A Zeiss',
+        startHour: 14.0,
+        durationMinutes: 60,
+        duration: 1.0,
+        patientLink: 'https://ppec.pethyoeung.com/backend/patient/11019',
+        patientName: 'Rithy Kem',
+        patientPhone: '011 456 789',
+        surgeryType: 'Cataract',
+        eyeSide: 'LE',
+        notes: 'Alcon AcrySof +22.5D, monitor BP pre-op',
+        doctorId: 'DOC-02',
+        doctorName: 'Dr. Channary Ly',
+        status: 'Confirmed',
+        totalFee: 650,
+        paidStatus: 'UNPAID',
+        paidDate: ''
+      },
+      {
+        id: 'BK-1005',
+        date: '2026-10-15',
+        bed: 'B Leica',
+        startHour: 15.0,
+        durationMinutes: 30,
+        duration: 0.5,
+        patientLink: 'https://ppec.pethyoeung.com/backend/patient/11020',
+        patientName: 'Bopha Chhay',
+        patientPhone: '015 887 210',
+        surgeryType: 'Other surgery',
+        eyeSide: 'RE',
+        notes: 'Chalazion excision & curettage',
+        doctorId: 'DOC-03',
+        doctorName: 'Dr. Borey Prak',
+        status: 'Confirmed',
+        totalFee: 300,
+        paidStatus: 'UNPAID',
+        paidDate: ''
+      },
+
+      // === FRIDAY, 2026-10-16 ===
+      {
+        id: 'BK-1006',
+        date: '2026-10-16',
+        bed: 'A Zeiss',
+        startHour: 8.0,
+        durationMinutes: 60,
+        duration: 1.0,
+        patientLink: 'https://ppec.pethyoeung.com/backend/patient/11025',
+        patientName: 'Chantrea Pich',
+        patientPhone: '012 765 432',
+        surgeryType: 'Cataract',
+        eyeSide: 'RE',
+        notes: 'Multifocal IOL implantation',
+        doctorId: 'DOC-01',
+        doctorName: 'Dr. Vannak Heng',
+        status: 'Confirmed',
+        totalFee: 650,
+        paidStatus: 'UNPAID',
+        paidDate: ''
+      },
+      {
+        id: 'BK-1007',
+        date: '2026-10-16',
+        bed: 'B Leica',
+        startHour: 14.0,
+        durationMinutes: 60,
+        duration: 1.0,
+        patientLink: 'https://ppec.pethyoeung.com/backend/patient/11029',
+        patientName: 'Sovannara Kouch',
+        patientPhone: '092 331 990',
+        surgeryType: 'Eyelid surgery',
+        eyeSide: 'BE',
+        notes: 'Ptosis repair bilateral',
+        doctorId: 'DOC-02',
+        doctorName: 'Dr. Channary Ly',
+        status: 'Confirmed',
+        totalFee: 450,
+        paidStatus: 'UNPAID',
+        paidDate: ''
+      },
+
+      // === MONDAY, 2026-10-19 (> 2 days ahead from Oct 15) ===
+      {
+        id: 'BK-1008',
+        date: '2026-10-19',
+        bed: 'A Zeiss',
+        startHour: 9.0,
+        durationMinutes: 30,
+        duration: 0.5,
+        patientLink: 'https://ppec.pethyoeung.com/backend/patient/11044',
+        patientName: 'Makara Heng',
+        patientPhone: '016 554 321',
+        surgeryType: 'Pterygium',
+        eyeSide: 'RE',
+        notes: 'Primary nasal pterygium excision',
+        doctorId: 'DOC-01',
+        doctorName: 'Dr. Vannak Heng',
+        status: 'Confirmed',
+        totalFee: 250,
+        paidStatus: 'UNPAID',
+        paidDate: ''
+      }
+    ];
+
+    const INITIAL_AUDIT_LOGS = [
+      {
+        id: 'LOG-101',
+        timestamp: '2026-10-15 07:45',
+        actorName: 'Dr. Vannak Heng',
+        actorRole: 'DOCTOR',
+        action: 'CREATED',
+        details: 'Booked Bed A Zeiss for Sokha Chan (Cataract 60m) on 2026-10-15 at 08:00 AM'
+      },
+      {
+        id: 'LOG-102',
+        timestamp: '2026-10-15 08:10',
+        actorName: 'Dr. Channary Ly',
+        actorRole: 'DOCTOR',
+        action: 'CREATED',
+        details: 'Booked Bed B Leica for Sreyneang Kim (Eyelid surgery 60m) on 2026-10-15 at 08:30 AM'
+      },
+      {
+        id: 'LOG-103',
+        timestamp: '2026-10-15 11:20',
+        actorName: 'PPEC OR Admin',
+        actorRole: 'ADMIN',
+        action: 'PAID_SETTLEMENT',
+        details: 'Marked doctor payout 70% ($455) paid for Dr. Vannak Heng on case BK-1001'
+      }
+    ];
+
+    // =========================================================================
+    // STATE VARIABLES
+    // =========================================================================
+    let users = [];
+    let bookings = [];
+    let auditLogs = [];
+    let loggedInUser = null;
+    let activeMainTab = 'calendar';
+    let activeCalendarMode = 'daily';
+    let currentMonthYear = { year: 2026, month: 9 }; // October 2026 (0-indexed month = 9)
+
+    let db = null;
+    let auth = null;
+    let firebaseUser = null;
+    let isCloudConnected = false;
+    let cloudUnsubscribers = [];
+    const firebaseConfig = {
+      apiKey: "AIzaSyBkpAofgqWvkBHjf8ji47MoSf3Z8x-ccOs",
+      authDomain: "ppec-booking.firebaseapp.com",
+      projectId: "ppec-booking",
+      storageBucket: "ppec-booking.firebasestorage.app",
+      messagingSenderId: "2365315266",
+      appId: "1:2365315266:web:a949a1bcdad6067fd1c35b"
+    };
+    const FIRESTORE_COLLECTIONS = {
+      bookings: 'ppec_eye_bookings',
+      users: 'ppec_user',
+      logs: 'ppec_eye_logs'
+    };
+
+    // =========================================================================
+    // HELPER FUNCTIONS
+    // =========================================================================
+    function setText(id, text) {
+      const el = document.getElementById(id);
+      if (el) el.textContent = String(text);
+    }
+
+    function sanitizeUserProfile(profile) {
+      const safeProfile = { ...profile };
+      delete safeProfile.password;
+      return safeProfile;
+    }
+
+    function showToast(msg) {
+      const toast = document.getElementById('toastBanner');
+      setText('toastMessage', msg);
+      if (!toast) return;
+      toast.classList.remove('hidden');
+      setTimeout(() => toast.classList.add('hidden'), 3600);
+    }
+
+    function getSelectedDate() {
+      const el = document.getElementById('scheduleDateInput');
+      return (el && el.value) ? el.value : DEFAULT_TODAY;
+    }
+
+    function parseDateParts(yyyyMmDd) {
+      const parts = (yyyyMmDd || DEFAULT_TODAY).split('-').map(Number);
+      return new Date(parts[0], parts[1] - 1, parts[2]);
+    }
+
+    function isSundayDate(yyyyMmDd) {
+      const d = parseDateParts(yyyyMmDd);
+      return d.getDay() === 0; // 0 = Sunday
+    }
+
+    function formatReadableDate(yyyyMmDd) {
+      const d = parseDateParts(yyyyMmDd);
+      return d.toLocaleDateString('en-US', {
+        weekday: 'short',
+        month: 'short',
+        day: 'numeric',
+        year: 'numeric'
+      });
+    }
+
+    function formatHour(decimalHour) {
+      const num = Number(decimalHour) || 0;
+      const hrs = Math.floor(num);
+      const mins = Math.round((num - hrs) * 60);
+      const ampm = hrs < 12 ? 'AM' : 'PM';
+      const displayHr = hrs > 12 ? hrs - 12 : (hrs === 0 ? 12 : hrs);
+      return `${String(displayHr).padStart(2, '0')}:${String(mins).padStart(2, '0')} ${ampm}`;
+    }
+
+    function formatHour24(decimalHour) {
+      const num = Number(decimalHour) || 0;
+      const hrs = Math.floor(num);
+      const mins = Math.round((num - hrs) * 60);
+      return `${String(hrs).padStart(2, '0')}:${String(mins).padStart(2, '0')}`;
+    }
+
+    // Q7 Privacy Rule: Can the currently logged-in user view sensitive details of this booking?
+    function canViewBookingDetails(booking) {
+      if (!loggedInUser) return false;
+      if (loggedInUser.role === 'ADMIN') return true;
+      return booking.doctorId === loggedInUser.id;
+    }
+
+    function getDayDifferenceFromToday(targetDateStr) {
+      const todayObj = parseDateParts(DEFAULT_TODAY);
+      const targetObj = parseDateParts(targetDateStr);
+      const diffMs = targetObj.getTime() - todayObj.getTime();
+      return Math.round(diffMs / (1000 * 60 * 60 * 24));
+    }
+
+    // =========================================================================
+    // CLOUD FIRESTORE REAL-TIME SYNC
+    // =========================================================================
+    async function initCloudSync() {
+      try {
+        const app = initializeApp(firebaseConfig);
+        auth = getAuth(app);
+        db = getFirestore(app);
+        setText('cloudSyncText', 'FIREBASE READY • SIGN IN');
+      } catch (e) {
+        reportCloudError('Firebase initialization error:', e);
+      }
+    }
+
+    function startCloudSync() {
+      cloudUnsubscribers.forEach(unsubscribe => unsubscribe());
+      cloudUnsubscribers = [];
+      isCloudConnected = true;
+      let initialSnapshots = 0;
+      setText('cloudSyncText', 'FIREBASE AUTHENTICATED • SYNCING');
+
+      const expectedSnapshots = loggedInUser.role === 'ADMIN' ? 3 : 2;
+      const onInitialSnapshot = () => {
+        initialSnapshots += 1;
+        if (initialSnapshots === expectedSnapshots) setText('cloudSyncText', 'FIREBASE SYNCED');
+      };
+
+      try {
+        const bookingsCol = collection(db, FIRESTORE_COLLECTIONS.bookings);
+        const bookingsQuery = loggedInUser.role === 'ADMIN'
+          ? bookingsCol
+          : query(bookingsCol, where('doctorId', '==', loggedInUser.id));
+        cloudUnsubscribers.push(onSnapshot(
+          bookingsQuery,
+          (snap) => {
+            const loaded = [];
+            snap.forEach(d => {
+              const data = d.data();
+              if (data && data.id) loaded.push(data);
+            });
+            bookings = loaded;
+            renderAll();
+            onInitialSnapshot();
+          },
+          (err) => reportCloudError('Bookings sync error:', err)
+        ));
+
+        const usersCol = collection(db, FIRESTORE_COLLECTIONS.users);
+        const usersQuery = loggedInUser.role === 'ADMIN'
+          ? usersCol
+          : doc(db, FIRESTORE_COLLECTIONS.users, firebaseUser.uid);
+        cloudUnsubscribers.push(onSnapshot(
+          usersQuery,
+          (snap) => {
+            const loadedUsers = [];
+            if (loggedInUser.role === 'ADMIN') {
+              snap.forEach(d => {
+                const data = d.data();
+                if (data && data.id) loadedUsers.push(sanitizeUserProfile({ ...data, authUid: d.id }));
+              });
+            } else if (snap.exists()) {
+              const data = snap.data();
+              if (data && data.id) loadedUsers.push(sanitizeUserProfile({ ...data, authUid: snap.id }));
+            }
+            users = loadedUsers;
+            if (loggedInUser) {
+              const updatedSelf = users.find(u => u.id === loggedInUser.id);
+              if (updatedSelf) loggedInUser = updatedSelf;
+            }
+            renderAll();
+            onInitialSnapshot();
+          },
+          (err) => reportCloudError('Users sync error:', err)
+        ));
+
+        if (loggedInUser.role === 'ADMIN') {
+          const logsCol = collection(db, FIRESTORE_COLLECTIONS.logs);
+          cloudUnsubscribers.push(onSnapshot(
+            logsCol,
+            (snap) => {
+              const loadedLogs = [];
+              snap.forEach(d => {
+                const data = d.data();
+                if (data && data.id) loadedLogs.push(data);
+              });
+              auditLogs = loadedLogs.sort((a, b) => (b.id > a.id ? 1 : -1));
+              renderAuditLogs();
+              onInitialSnapshot();
+            },
+            (err) => reportCloudError('Logs sync error:', err)
+          ));
+        } else {
+          auditLogs = [];
+          renderAuditLogs();
+        }
+      } catch (e) {
+        isCloudConnected = false;
+        cloudUnsubscribers.forEach(unsubscribe => unsubscribe());
+        cloudUnsubscribers = [];
+        reportCloudError('Firebase sync setup error:', e);
+      }
+    }
+
+    function reportCloudError(message, error) {
+      console.error(message, error);
+      const code = error && typeof error === 'object' && 'code' in error ? error.code : '';
+      const status = code === 'permission-denied' || code === 'unauthenticated'
+        ? 'FIRESTORE ACCESS DENIED'
+        : 'FIREBASE CONNECTION ERROR';
+      setText('cloudSyncText', status);
+    }
+
+    function getFirebaseLoginError(error) {
+      const code = error && typeof error === 'object' ? error.code : '';
+      if (code === 'auth/configuration-not-found') {
+        return 'Firebase Authentication is not configured for ppec-booking. In Firebase Console, open Authentication, select Get started, and enable Email/Password sign-in.';
+      }
+      if (code === 'auth/invalid-credential' || code === 'auth/user-not-found' || code === 'auth/wrong-password') {
+        return 'Email or password is incorrect. Create this account under Firebase Console > Authentication.';
+      }
+      if (code === 'auth/operation-not-allowed') {
+        return 'Email/password sign-in is disabled. Enable it in Firebase Console > Authentication > Sign-in method.';
+      }
+      if (code === 'auth/network-request-failed') {
+        return 'Could not reach Firebase. Check your internet connection and run this page from node server.js.';
+      }
+      if (code === 'permission-denied' || code === 'firestore/permission-denied') {
+        return 'Authentication succeeded, but Firestore denied access. Check Firestore database and security rules.';
+      }
+      return 'Could not connect/sign in. Check the Firebase project, Auth settings, Firestore database, and browser console.';
+    }
+
+    function ensureCloudSession() {
+      if (!isCloudConnected || !db || !firebaseUser || !loggedInUser) {
+        throw new Error('Sign in to Firebase before changing data.');
+      }
+    }
+
+    async function saveCloudDocument(collectionName, documentId, data, errorMessage) {
+      try {
+        ensureCloudSession();
+        await setDoc(doc(db, collectionName, documentId), data);
+        return true;
+      } catch (error) {
+        reportCloudError('Firebase save failed:', error);
+        showToast(errorMessage);
+        return false;
+      }
+    }
+
+    async function persistBooking(bookingObj) {
+      if (!await saveCloudDocument(FIRESTORE_COLLECTIONS.bookings, bookingObj.id, bookingObj, 'Firebase could not save this booking. Check Firestore rules.')) return false;
+      const idx = bookings.findIndex(b => b.id === bookingObj.id);
+      if (idx >= 0) bookings[idx] = bookingObj;
+      else bookings.push(bookingObj);
+      renderAll();
+      return true;
+    }
+
+    async function removeBookingRecord(bookingId) {
+      try {
+        ensureCloudSession();
+        await deleteDoc(doc(db, FIRESTORE_COLLECTIONS.bookings, bookingId));
+      } catch (error) {
+        reportCloudError('Firebase booking delete failed:', error);
+        showToast('Firebase could not delete this booking. Check Firestore rules.');
+        return false;
+      }
+      bookings = bookings.filter(b => b.id !== bookingId);
+      renderAll();
+      return true;
+    }
+
+    async function persistUserRecord(userObj) {
+      const safeUser = sanitizeUserProfile(userObj);
+      const documentId = safeUser.authUid || (firebaseUser && safeUser.id === loggedInUser.id ? firebaseUser.uid : safeUser.id);
+      if (!await saveCloudDocument(FIRESTORE_COLLECTIONS.users, documentId, safeUser, 'Firebase could not save this profile. Check Firestore rules.')) return false;
+      const idx = users.findIndex(u => u.id === safeUser.id);
+      if (idx >= 0) users[idx] = safeUser;
+      else users.push(safeUser);
+      renderAll();
+      return true;
+    }
+
+    async function createUserRecord(userObj) {
+      ensureCloudSession();
+      const userRef = doc(db, FIRESTORE_COLLECTIONS.users, userObj.authUid);
+      await runTransaction(db, async transaction => {
+        const existing = await transaction.get(userRef);
+        if (existing.exists()) {
+          throw new Error('A profile already exists for this Firebase Authentication UID.');
+        }
+        transaction.set(userRef, sanitizeUserProfile(userObj));
+      });
+      users.push(sanitizeUserProfile(userObj));
+      renderAll();
+      return true;
+    }
+
+    async function appendAuditLog(action, details) {
+      if (!isCloudConnected || !db || !firebaseUser || !loggedInUser) {
+        showToast('Not connected to Firebase. The audit log was not saved.');
+        return false;
+      }
+      const now = new Date();
+      const timeStr = `${now.toISOString().slice(0, 10)} ${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+      const entry = {
+        id: `LOG-${Date.now()}`,
+        timestamp: timeStr,
+        actorUid: firebaseUser.uid,
+        actorName: loggedInUser.name,
+        actorRole: loggedInUser.role,
+        action,
+        details
+      };
+      if (!await saveCloudDocument(FIRESTORE_COLLECTIONS.logs, entry.id, entry, 'Firebase could not save the audit log. Check Firestore rules.')) return false;
+      auditLogs.unshift(entry);
+      renderAuditLogs();
+      return true;
+    }
+
+    // =========================================================================
+    // LOGIN & ACCOUNT MANAGEMENT (Q1, Q2, Q12)
+    // =========================================================================
+    function renderQuickLoginAccounts() {
+      const container = document.getElementById('quickLoginAccountsList');
+      if (!container) return;
+
+      container.innerHTML = INITIAL_USERS.map(user => {
+        const isDoctor = user.role === 'DOCTOR';
+        return `
+          <button
+            type="button"
+            data-demo-phone="${user.phone}"
+            data-demo-email="${user.email}"
+            class="w-full text-left px-3 py-2 rounded-xl border border-slate-200 hover:border-teal-500 bg-slate-50 hover:bg-teal-50/50 transition flex items-center justify-between gap-2 text-xs"
+          >
+            <div class="min-w-0">
+              <div class="font-bold text-slate-900 truncate">${user.name}</div>
+              <div class="text-[11px] text-slate-500 font-mono">Tel: ${user.phone}</div>
+            </div>
+            <span class="shrink-0 px-2 py-0.5 rounded-md text-[10px] font-extrabold ${
+              isDoctor ? 'bg-teal-100 text-teal-800' : 'bg-slate-900 text-amber-300'
+            }">
+              ${isDoctor ? `DOCTOR (${user.sharePct}%)` : 'ADMIN'}
+            </span>
+          </button>
+        `;
+      }).join('');
+
+      container.querySelectorAll('[data-demo-phone]').forEach(button => {
+        button.addEventListener('click', () => {
+          document.getElementById('loginPhoneInput').value = button.getAttribute('data-demo-phone');
+          document.getElementById('loginErrorBanner').classList.add('hidden');
+        });
+      });
+    }
+
+    async function handleLoginSubmit(e) {
+      e.preventDefault();
+      const loginIdentifier = document.getElementById('loginPhoneInput').value.trim();
+      const pass = document.getElementById('loginPasswordInput').value;
+      const errBanner = document.getElementById('loginErrorBanner');
+      errBanner.classList.add('hidden');
+      if (!auth || !db) {
+        setText('cloudSyncText', 'FIREBASE UNAVAILABLE');
+        setText('loginErrorBanner', 'Firebase has not initialized. Refresh after checking your connection.');
+        errBanner.classList.remove('hidden');
+        return;
+      }
+
+      try {
+        const loginEmail = loginIdentifier.includes('@')
+          ? loginIdentifier.toLowerCase()
+          : INITIAL_USERS.find(user => user.phone.replace(/\s+/g, '') === loginIdentifier.replace(/\s+/g, ''))?.email;
+        if (!loginEmail) {
+          setText('loginErrorBanner', 'This phone number has no Firebase email mapping. Enter your Firebase account email in the phone field, or add the matching profile to the platform.');
+          errBanner.classList.remove('hidden');
+          return;
+        }
+
+        const credential = await signInWithEmailAndPassword(auth, loginEmail, pass);
+        firebaseUser = credential.user;
+        const profileSnapshot = await getDoc(doc(db, FIRESTORE_COLLECTIONS.users, credential.user.uid));
+        if (!profileSnapshot.exists()) {
+          await signOut(auth);
+          firebaseUser = null;
+          setText('loginErrorBanner', `Authentication succeeded, but no profile exists for ${credential.user.email} at ppec_user / ${credential.user.uid}. Create the profile document using the Authentication UID as its Document ID.`);
+          errBanner.classList.remove('hidden');
+          return;
+        }
+
+        const matched = sanitizeUserProfile({ ...profileSnapshot.data(), authUid: profileSnapshot.id });
+        if (!matched.id ||
+          matched.email?.toLowerCase() !== credential.user.email?.toLowerCase() ||
+          !['ADMIN', 'DOCTOR'].includes(matched.role) || matched.status !== 'Approved') {
+          await signOut(auth);
+          firebaseUser = null;
+          setText('loginErrorBanner', 'Your ppec_user profile must have the same email, a valid id, role ADMIN or DOCTOR, and status Approved.');
+          errBanner.classList.remove('hidden');
+          return;
+        }
+
+        loggedInUser = matched;
+        users = [matched];
+        bookings = [];
+        auditLogs = [];
+        startCloudSync();
+        document.getElementById('loginGateOverlay').classList.add('hidden');
+        setText('headerUserRoleBadge', matched.role);
+        setText('headerUserName', matched.name);
+        setText('headerUserPhone', matched.phone);
+
+        const isAdmin = matched.role === 'ADMIN';
+        document.getElementById('addDoctorModalBtn').classList.toggle('hidden', !isAdmin);
+        document.getElementById('adminDoctorSelectorWrap').classList.toggle('hidden', !isAdmin);
+        document.getElementById('adminRuleOverrideBox').classList.toggle('hidden', !isAdmin);
+        setText(
+          'privacyRuleBanner',
+          isAdmin
+            ? 'Administrator View: Full access to all surgeons, patient data, schedules, and financial settlements'
+            : 'Surgeon View (Q7 Privacy): Other surgeons\' bookings appear strictly as "Bed Occupied" (confidential)'
+        );
+        if (matched.mustChangePassword) {
+          document.getElementById('newPasswordInput').value = '';
+          document.getElementById('changePasswordModal').classList.remove('hidden');
+        }
+        renderAll();
+        showToast(`Welcome, ${matched.name}`);
+      } catch (error) {
+        console.error('Firebase sign-in failed:', error);
+        if (firebaseUser) {
+          try {
+            await signOut(auth);
+          } catch (signOutError) {
+            console.error('Firebase sign-out after failed sign-in failed:', signOutError);
+          }
+        }
+        firebaseUser = null;
+        setText('loginErrorBanner', getFirebaseLoginError(error));
+        errBanner.classList.remove('hidden');
+        setText('cloudSyncText', error && error.code === 'auth/configuration-not-found'
+          ? 'FIREBASE AUTH NOT CONFIGURED'
+          : 'FIREBASE SIGN-IN FAILED');
+      }
+    }
+
+    // =========================================================================
+    // SLOT AVAILABILITY & CONFLICT ENGINE (Q3, Q4, Q5)
+    // =========================================================================
+    function isSlotRangeValidWithinSession(startHour, durationHours) {
+      const endHour = startHour + durationHours;
+      // Morning session: 8.0 to 11.0
+      const inMorning = startHour >= 8.0 && endHour <= 11.0;
+      // Afternoon session: 14.0 to 17.0
+      const inAfternoon = startHour >= 14.0 && endHour <= 17.0;
+      return inMorning || inAfternoon;
+    }
+
+    function checkBedConflict(dateStr, bedId, startHour, durationHours, ignoreBookingId = '') {
+      const endHour = startHour + durationHours;
+      for (const b of bookings) {
+        if (b.id === ignoreBookingId) continue;
+        if (b.date !== dateStr || b.bed !== bedId) continue;
+        const bStart = Number(b.startHour);
+        const bEnd = bStart + Number(b.duration);
+        if (startHour < bEnd && endHour > bStart) {
+          return b;
+        }
+      }
+      return null;
+    }
+
+    function findAvailableSlotsForDate(dateStr, durationMinutes = 60, ignoreBookingId = '') {
+      if (isSundayDate(dateStr)) return [];
+      const durationHours = Number(durationMinutes) / 60;
+      const available = [];
+
+      for (const bed of SURGICAL_BEDS) {
+        for (const slotStart of ALL_DAILY_SLOTS) {
+          if (!isSlotRangeValidWithinSession(slotStart, durationHours)) continue;
+          const conflict = checkBedConflict(dateStr, bed.id, slotStart, durationHours, ignoreBookingId);
+          if (!conflict) {
+            available.push({
+              bed: bed.id,
+              startHour: slotStart,
+              endHour: slotStart + durationHours,
+              session: slotStart < 12 ? 'Morning' : 'Afternoon'
+            });
+          }
+        }
+      }
+      return available;
+    }
+
+    // =========================================================================
+    // FILTERED BOOKINGS (Respecting Q7 Privacy in Search!)
+    // =========================================================================
+    function getFilteredBookingsForDate(dateStr) {
+      const bedFilter = document.getElementById('bedFilter')?.value || 'ALL';
+      const typeFilter = document.getElementById('surgeryTypeFilter')?.value || 'ALL';
+      const statusFilter = document.getElementById('statusFilter')?.value || 'ALL';
+      const query = (document.getElementById('searchInput')?.value || '').trim().toLowerCase();
+
+      return bookings.filter(b => {
+        if (b.date !== dateStr) return false;
+        if (bedFilter !== 'ALL' && b.bed !== bedFilter) return false;
+        if (typeFilter !== 'ALL' && b.surgeryType !== typeFilter) return false;
+        if (statusFilter !== 'ALL' && b.status !== statusFilter) return false;
+
+        if (query) {
+          // Q7 & Q10: Search ONLY matches fields that the user has permission to see!
+          const allowedToSee = canViewBookingDetails(b);
+          if (!allowedToSee) {
+            return b.bed.toLowerCase().includes(query);
+          }
+          const hay = `${b.patientName} ${b.patientPhone} ${b.patientLink} ${b.doctorName} ${b.surgeryType} ${b.bed} ${b.notes}`.toLowerCase();
+          return hay.includes(query);
+        }
+        return true;
+      });
+    }
+
+    // =========================================================================
+    // RENDER DASHBOARD KPIS & TOP DATE BAR (Q10)
+    // =========================================================================
+    function renderKPIsAndDateBar() {
+      const selectedDate = getSelectedDate();
+      const isSun = isSundayDate(selectedDate);
+
+      setText('activeDateDisplay', `${formatReadableDate(selectedDate)} (${selectedDate})`);
+      setText('dailyHeaderDateBadge', formatReadableDate(selectedDate));
+      setText('sidebarQuickDateLabel', selectedDate);
+
+      const sunBadge = document.getElementById('sundayWarningBadge');
+      if (sunBadge) sunBadge.classList.toggle('hidden', !isSun);
+
+      // Quick jump dates bar
+      const countsByDate = {};
+      bookings.forEach(b => {
+        countsByDate[b.date] = (countsByDate[b.date] || 0) + 1;
+      });
+      const sortedDates = Object.keys(countsByDate).sort();
+      const quickBar = document.getElementById('bookedDatesQuickBar');
+      if (quickBar) {
+        quickBar.innerHTML = sortedDates.map(d => {
+          const active = d === selectedDate;
+          return `
+            <button
+              type="button"
+              data-jump-date="${d}"
+              class="px-2 py-0.5 rounded-md text-[11px] font-bold transition border ${
+                active
+                  ? 'bg-teal-500 text-slate-950 border-teal-400'
+                  : 'bg-slate-800 text-slate-300 border-slate-700 hover:bg-slate-700 hover:text-white'
+              }"
+            >
+              ${d} (${countsByDate[d]})
+            </button>
+          `;
+        }).join('');
+
+        quickBar.querySelectorAll('[data-jump-date]').forEach(btn => {
+          btn.addEventListener('click', () => {
+            document.getElementById('scheduleDateInput').value = btn.getAttribute('data-jump-date');
+            renderAll();
+          });
+        });
+      }
+
+      // KPI Calculations for selectedDate
+      const dayBookings = bookings.filter(b => b.date === selectedDate);
+      const morningCount = dayBookings.filter(b => b.startHour < 12).length;
+      const afternoonCount = dayBookings.filter(b => b.startHour >= 12).length;
+      const bookedHours = dayBookings.reduce((acc, b) => acc + Number(b.duration || 0), 0);
+      // Total daily capacity: 2 beds * 6 hours (3h morning + 3h afternoon) = 12 hours
+      const utilizationPct = isSun ? 0 : Math.min(100, Math.round((bookedHours / 12) * 100));
+
+      setText('kpiTodayCases', `${dayBookings.length} Cases`);
+      setText('kpiTodayBreakdown', `Morning: ${morningCount} • Afternoon: ${afternoonCount}`);
+      setText('kpiAvailableBeds', isSun ? '0 Beds (Sunday Closed)' : '2 Beds');
+      setText('kpiBookedHours', `${bookedHours.toFixed(1)} Hours`);
+      setText('kpiRemainingHours', `${Math.max(0, 12 - bookedHours).toFixed(1)}h available / 12h total`);
+      setText('kpiUtilizationPct', `${utilizationPct}%`);
+    }
+
+    // =========================================================================
+    // RENDER DAILY CALENDAR VIEW (Morning 08-11 & Afternoon 14-17)
+    // =========================================================================
+    function renderDailyView() {
+      const container = document.getElementById('dailyScheduleContainer');
+      const tbody = document.getElementById('dailyRosterTableBody');
+      if (!container || !tbody) return;
+
+      const selectedDate = getSelectedDate();
+      const isSun = isSundayDate(selectedDate);
+      const filteredDayBookings = getFilteredBookingsForDate(selectedDate);
+      setText('dailyRosterCountBadge', `${filteredDayBookings.length} Cases`);
+
+      if (isSun) {
+        container.innerHTML = `
+          <div class="p-8 rounded-2xl bg-rose-50 border border-rose-200 text-center space-y-2">
+            <div class="text-base font-extrabold text-rose-800">Sunday Closed — Operating Suites Offline (Q3)</div>
+            <p class="text-xs text-rose-600">PPEC Operating Rooms operate Monday through Saturday (08:00–11:00 AM and 02:00–05:00 PM). Please select a date from Monday to Saturday.</p>
+          </div>
+        `;
+      } else {
+        const bedFilter = document.getElementById('bedFilter')?.value || 'ALL';
+        const visibleBeds = SURGICAL_BEDS.filter(b => bedFilter === 'ALL' || b.id === bedFilter);
+
+        const renderSessionGrid = (sessionTitle, sessionSubtitle, slotHoursArray) => {
+          return `
+            <div class="border border-slate-200 rounded-2xl overflow-hidden">
+              <div class="bg-slate-100/80 px-4 py-2.5 border-b border-slate-200 flex items-center justify-between">
+                <span class="text-xs sm:text-sm font-extrabold text-slate-800">${sessionTitle}</span>
+                <span class="text-xs font-semibold text-slate-500">${sessionSubtitle}</span>
+              </div>
+              <div class="divide-y divide-slate-200">
+                ${visibleBeds.map(bed => {
+                  let skipNextSlot = false;
+                  const cellsHtml = slotHoursArray.map(slotHr => {
+                    if (skipNextSlot) {
+                      skipNextSlot = false;
+                      return '';
+                    }
+                    const bookingAtSlot = bookings.find(
+                      b => b.date === selectedDate && b.bed === bed.id && Number(b.startHour) === slotHr
+                    );
+
+                    if (bookingAtSlot) {
+                      const spansTwoSlots = Number(bookingAtSlot.durationMinutes) >= 60;
+                      if (spansTwoSlots) skipNextSlot = true;
+                      const colSpanClass = spansTwoSlots ? 'col-span-2' : 'col-span-1';
+                      const canSee = canViewBookingDetails(bookingAtSlot);
+                      const timeLabel = `${formatHour24(bookingAtSlot.startHour)}–${formatHour24(bookingAtSlot.startHour + bookingAtSlot.duration)}`;
+
+                      if (canSee) {
+                        return `
+                          <div
+                            data-booking-id="${bookingAtSlot.id}"
+                            class="${colSpanClass} p-2.5 rounded-xl bg-teal-600 hover:bg-teal-500 text-white shadow-xs cursor-pointer transition flex flex-col justify-between min-h-[82px]"
+                          >
+                            <div class="flex items-center justify-between gap-1">
+                              <span class="text-[10px] font-extrabold bg-black/20 px-1.5 py-0.5 rounded">${timeLabel} (${bookingAtSlot.durationMinutes}m)</span>
+                              <span class="text-[10px] font-bold bg-white/20 px-1.5 py-0.5 rounded">${bookingAtSlot.eyeSide}</span>
+                            </div>
+                            <div class="font-extrabold text-xs truncate mt-1">${bookingAtSlot.patientName}</div>
+                            <div class="text-[11px] text-teal-100 truncate">${bookingAtSlot.surgeryType} • ${bookingAtSlot.doctorName}</div>
+                          </div>
+                        `;
+                      } else {
+                        // Q7 Privacy View for other doctors: strictly show "Bed Occupied"
+                        return `
+                          <div
+                            data-occupied-info="${bed.name} (${timeLabel})"
+                            class="${colSpanClass} p-2.5 rounded-xl bg-slate-600 text-white striped-occupied border border-slate-700 cursor-not-allowed flex flex-col justify-between min-h-[82px]"
+                          >
+                            <div class="flex items-center justify-between gap-1">
+                              <span class="text-[10px] font-extrabold bg-black/30 px-1.5 py-0.5 rounded">${timeLabel}</span>
+                              <span class="text-[10px] font-bold bg-amber-400/20 text-amber-200 px-1.5 py-0.5 rounded">Q7 Confidential</span>
+                            </div>
+                            <div class="font-extrabold text-xs sm:text-sm text-center my-auto">«${bed.name} Occupied»</div>
+                            <div class="text-[10px] text-slate-300 text-center truncate">Doctor &amp; Patient details hidden</div>
+                          </div>
+                        `;
+                      }
+                    }
+
+                    // Otherwise free 30-min slot
+                    return `
+                      <button
+                        type="button"
+                        data-open-bed="${bed.id}"
+                        data-open-hour="${slotHr}"
+                        class="col-span-1 p-2.5 rounded-xl border border-dashed border-emerald-300 bg-emerald-50/40 hover:bg-emerald-100/70 text-emerald-800 transition flex flex-col items-center justify-center min-h-[82px] group"
+                      >
+                        <span class="text-xs font-extrabold">${formatHour24(slotHr)}</span>
+                        <span class="text-[11px] font-semibold text-emerald-600 group-hover:underline mt-1">+ Available</span>
+                      </button>
+                    `;
+                  }).join('');
+
+                  return `
+                    <div class="p-3.5 grid grid-cols-1 lg:grid-cols-12 gap-3 items-center">
+                      <div class="lg:col-span-3 pr-2">
+                        <div class="flex items-center gap-2">
+                          <span class="w-2.5 h-2.5 rounded-full ${bed.id === 'A Zeiss' ? 'bg-teal-500' : 'bg-indigo-500'}"></span>
+                          <span class="font-extrabold text-sm text-slate-900">${bed.name}</span>
+                        </div>
+                        <p class="text-[11px] text-slate-500 mt-0.5">${bed.microscope}</p>
+                      </div>
+                      <div class="lg:col-span-9 grid grid-cols-2 sm:grid-cols-6 gap-2">
+                        ${cellsHtml}
+                      </div>
+                    </div>
+                  `;
+                }).join('')}
+              </div>
+            </div>
+          `;
+        };
+
+        container.innerHTML = `
+          ${renderSessionGrid('Morning Session', '08:00 AM – 11:00 AM (3.0 hours per bed)', MORNING_SLOTS)}
+          ${renderSessionGrid('Afternoon Session', '02:00 PM – 05:00 PM (3.0 hours per bed)', AFTERNOON_SLOTS)}
+        `;
+
+        // Bind events on Daily Grid
+        container.querySelectorAll('[data-booking-id]').forEach(el => {
+          el.addEventListener('click', () => openEditBookingModal(el.getAttribute('data-booking-id')));
+        });
+        container.querySelectorAll('[data-occupied-info]').forEach(el => {
+          el.addEventListener('click', () => {
+            showToast('Bed Occupied: Surgeon and patient details are kept confidential under Q7 privacy rules.');
+          });
+        });
+        container.querySelectorAll('[data-open-bed]').forEach(btn => {
+          btn.addEventListener('click', () => {
+            openNewBookingModal({
+              date: selectedDate,
+              bed: btn.getAttribute('data-open-bed'),
+              startHour: parseFloat(btn.getAttribute('data-open-hour'))
+            });
+          });
+        });
+      }
+
+      // Render Daily Roster Table (respecting Q7 Privacy)
+      const sortedList = [...filteredDayBookings].sort((a, b) => a.startHour - b.startHour);
+      if (sortedList.length === 0) {
+        tbody.innerHTML = `
+          <tr>
+            <td colspan="7" class="py-6 text-center text-slate-400 text-xs">No scheduled surgical cases found for this date.</td>
+          </tr>
+        `;
+      } else {
+        tbody.innerHTML = sortedList.map(b => {
+          const canSee = canViewBookingDetails(b);
+          const timeStr = `${formatHour(b.startHour)} – ${formatHour(b.startHour + b.duration)} (${b.durationMinutes}m)`;
+
+          if (!canSee) {
+            return `
+              <tr class="bg-slate-50/80 text-slate-500">
+                <td class="py-3 px-4 font-bold text-slate-800">${timeStr}<div class="text-[11px] text-teal-700">${b.bed}</div></td>
+                <td class="py-3 px-4 italic" colspan="4">«${b.bed} Occupied» — Confidential under Doctor Privacy Matrix (Q7)</td>
+                <td class="py-3 px-4"><span class="px-2 py-0.5 rounded-full text-[11px] font-bold bg-slate-200 text-slate-700">Occupied</span></td>
+                <td class="py-3 px-4 text-right text-[11px] text-slate-400">Restricted</td>
+              </tr>
+            `;
+          }
+
+          return `
+            <tr class="hover:bg-slate-50 transition">
+              <td class="py-3 px-4 whitespace-nowrap">
+                <div class="font-bold text-slate-900">${timeStr}</div>
+                <div class="text-[11px] font-bold text-teal-700">${b.bed}</div>
+              </td>
+              <td class="py-3 px-4">
+                <div class="font-bold text-slate-900">${b.patientName}</div>
+                <div class="text-[11px] text-rose-700 font-semibold">Tel: ${b.patientPhone}</div>
+                <a href="${b.patientLink}" target="_blank" rel="noopener noreferrer" class="text-[11px] text-blue-600 hover:underline font-mono break-all">${b.patientLink}</a>
+              </td>
+              <td class="py-3 px-4">
+                <div class="font-bold text-slate-800">${SURGERY_TYPES[b.surgeryType]?.label || b.surgeryType}</div>
+                <div class="text-[11px] font-semibold text-indigo-700">Operative Eye: ${b.eyeSide}</div>
+              </td>
+              <td class="py-3 px-4 font-semibold text-slate-800">${b.doctorName}</td>
+              <td class="py-3 px-4 text-slate-600 max-w-[220px]">${b.notes || '—'}</td>
+              <td class="py-3 px-4">
+                <span class="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-teal-100 text-teal-800">${b.status}</span>
+              </td>
+              <td class="py-3 px-4 text-right">
+                <button type="button" data-roster-edit="${b.id}" class="px-3 py-1.5 rounded-lg text-xs font-bold bg-slate-100 hover:bg-teal-600 hover:text-white text-slate-700 transition">
+                  Edit / Cancel
+                </button>
+              </td>
+            </tr>
+          `;
+        }).join('');
+
+        tbody.querySelectorAll('[data-roster-edit]').forEach(btn => {
+          btn.addEventListener('click', () => openEditBookingModal(btn.getAttribute('data-roster-edit')));
+        });
+      }
+
+      // Render Sidebar Smart Available Slots (Q5)
+      renderSidebarAvailableSlots(selectedDate);
+    }
+
+    function renderSidebarAvailableSlots(dateStr) {
+      const listEl = document.getElementById('sidebarAvailableSlotsList');
+      if (!listEl) return;
+
+      if (isSundayDate(dateStr)) {
+        listEl.innerHTML = `<div class="text-xs text-rose-600 font-semibold">Suites are closed on Sundays.</div>`;
+        return;
+      }
+
+      const free60 = findAvailableSlotsForDate(dateStr, 60);
+      if (free60.length === 0) {
+        listEl.innerHTML = `<div class="text-xs text-amber-700">All surgical slots are fully booked for this date.</div>`;
+        return;
+      }
+
+      listEl.innerHTML = free60.slice(0, 8).map(slot => `
+        <button
+          type="button"
+          data-sidebar-bed="${slot.bed}"
+          data-sidebar-hour="${slot.startHour}"
+          class="w-full p-2 rounded-xl border border-slate-200 hover:border-teal-500 bg-slate-50 hover:bg-teal-50/60 transition flex items-center justify-between text-xs"
+        >
+          <div>
+            <span class="font-extrabold text-slate-900">${slot.bed}</span>
+            <span class="text-slate-500 ml-1">(${slot.session})</span>
+          </div>
+          <span class="font-bold text-teal-700">${formatHour24(slot.startHour)} – ${formatHour24(slot.endHour)}</span>
+        </button>
+      `).join('');
+
+      listEl.querySelectorAll('[data-sidebar-bed]').forEach(btn => {
+        btn.addEventListener('click', () => {
+          openNewBookingModal({
+            date: dateStr,
+            bed: btn.getAttribute('data-sidebar-bed'),
+            startHour: parseFloat(btn.getAttribute('data-sidebar-hour'))
+          });
+        });
+      });
+    }
+
+    // =========================================================================
+    // RENDER WEEKLY VIEW (Monday to Saturday — Q3 & Q10)
+    // =========================================================================
+    function renderWeeklyView() {
+      const container = document.getElementById('weeklyGridContainer');
+      if (!container) return;
+
+      const selectedObj = parseDateParts(getSelectedDate());
+      const dayOfWeek = selectedObj.getDay(); // 0 Sun .. 6 Sat
+      const diffToMonday = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
+      const monday = new Date(selectedObj.getFullYear(), selectedObj.getMonth(), selectedObj.getDate() + diffToMonday);
+
+      const weekDays = [];
+      for (let i = 0; i < 6; i++) {
+        const d = new Date(monday.getFullYear(), monday.getMonth(), monday.getDate() + i);
+        const iso = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+        weekDays.push({ iso, label: formatReadableDate(iso) });
+      }
+
+      setText('weeklyRangeSubtitle', `Week Range: ${weekDays[0].iso} through ${weekDays[5].iso} (Monday to Saturday)`);
+
+      container.innerHTML = `
+        <div class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-3 min-w-[900px]">
+          ${weekDays.map(day => {
+            const dayCases = bookings.filter(b => b.date === day.iso).sort((a, b) => a.startHour - b.startHour);
+            const totalHrs = dayCases.reduce((s, b) => s + Number(b.duration || 0), 0);
+
+            return `
+              <div class="border border-slate-200 rounded-2xl p-3 bg-slate-50/50 flex flex-col justify-between space-y-3">
+                <div>
+                  <div class="flex items-center justify-between border-b border-slate-200 pb-2">
+                    <button type="button" data-week-jump="${day.iso}" class="text-left hover:text-teal-600">
+                      <div class="text-xs font-extrabold text-slate-900">${day.label.split(',')[0]}</div>
+                      <div class="text-[10px] text-slate-500">${day.iso}</div>
+                    </button>
+                    <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-teal-100 text-teal-800">${totalHrs}h / 12h</span>
+                  </div>
+
+                  <div class="mt-2.5 space-y-2">
+                    ${
+                      dayCases.length === 0
+                        ? `<div class="text-[11px] text-slate-400 italic py-4 text-center">Both beds available</div>`
+                        : dayCases.map(c => {
+                            const canSee = canViewBookingDetails(c);
+                            const tRange = `${formatHour24(c.startHour)}–${formatHour24(c.startHour + c.duration)}`;
+                            if (!canSee) {
+                              return `
+                                <div class="p-2 rounded-xl bg-slate-600 text-white text-[11px]">
+                                  <div class="font-bold">${c.bed} • ${tRange}</div>
+                                  <div class="text-[10px] text-slate-200">«Bed Occupied»</div>
+                                </div>
+                              `;
+                            }
+                            return `
+                              <div data-week-case="${c.id}" class="p-2 rounded-xl bg-teal-600 hover:bg-teal-500 text-white text-[11px] cursor-pointer transition">
+                                <div class="font-bold flex justify-between"><span>${c.bed}</span><span>${tRange}</span></div>
+                                <div class="font-extrabold truncate mt-0.5">${c.patientName}</div>
+                                <div class="text-[10px] text-teal-100 truncate">${c.surgeryType} (${c.eyeSide})</div>
+                              </div>
+                            `;
+                          }).join('')
+                    }
+                  </div>
+                </div>
+
+                <button type="button" data-week-book="${day.iso}" class="w-full py-1.5 rounded-xl text-[11px] font-bold bg-white hover:bg-teal-50 text-teal-700 border border-slate-200 transition">
+                  + Book Date
+                </button>
+              </div>
+            `;
+          }).join('')}
+        </div>
+      `;
+
+      container.querySelectorAll('[data-week-jump]').forEach(btn => {
+        btn.addEventListener('click', () => {
+          document.getElementById('scheduleDateInput').value = btn.getAttribute('data-week-jump');
+          switchCalendarMode('daily');
+        });
+      });
+      container.querySelectorAll('[data-week-case]').forEach(el => {
+        el.addEventListener('click', () => openEditBookingModal(el.getAttribute('data-week-case')));
+      });
+      container.querySelectorAll('[data-week-book]').forEach(btn => {
+        btn.addEventListener('click', () => openNewBookingModal({ date: btn.getAttribute('data-week-book') }));
+      });
+    }
+
+    // =========================================================================
+    // RENDER MONTHLY VIEW (Q10)
+    // =========================================================================
+    function renderMonthlyView() {
+      const container = document.getElementById('monthlyGridContainer');
+      if (!container) return;
+
+      const { year, month } = currentMonthYear;
+      const firstDay = new Date(year, month, 1);
+      const lastDay = new Date(year, month + 1, 0);
+      const monthName = firstDay.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+      setText('monthlyHeaderTitle', `Monthly Operating Schedule — ${monthName}`);
+
+      const startPad = firstDay.getDay(); // 0=Sun..6=Sat
+      const totalDays = lastDay.getDate();
+
+      let cells = [];
+      for (let i = 0; i < startPad; i++) {
+        cells.push(`<div class="p-2 min-h-[88px] bg-slate-50/40 rounded-xl border border-slate-100"></div>`);
+      }
+
+      for (let d = 1; d <= totalDays; d++) {
+        const iso = `${year}-${String(month + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+        const dateObj = new Date(year, month, d);
+        const isSun = dateObj.getDay() === 0;
+        const dayCases = bookings.filter(b => b.date === iso);
+        const dayHours = dayCases.reduce((s, b) => s + Number(b.duration || 0), 0);
+
+        if (isSun) {
+          cells.push(`
+            <div class="p-2.5 min-h-[88px] rounded-xl bg-rose-50/50 border border-rose-100 flex flex-col justify-between text-xs">
+              <span class="font-bold text-rose-400">${d}</span>
+              <span class="text-[10px] font-semibold text-rose-400">Sunday (Closed)</span>
+            </div>
+          `);
+        } else {
+          cells.push(`
+            <div
+              data-month-date="${iso}"
+              class="p-2.5 min-h-[88px] rounded-xl border ${
+                iso === getSelectedDate() ? 'border-teal-500 bg-teal-50/40' : 'border-slate-200 bg-white hover:border-teal-400'
+              } cursor-pointer transition flex flex-col justify-between"
+            >
+              <div class="flex items-center justify-between">
+                <span class="font-extrabold text-xs text-slate-800">${d}</span>
+                ${dayCases.length > 0 ? `<span class="px-1.5 py-0.2 rounded text-[10px] font-bold bg-teal-100 text-teal-800">${dayCases.length} Cases</span>` : ''}
+              </div>
+              <div class="text-[10px] text-slate-500">
+                ${dayCases.length > 0 ? `Booked ${dayHours}h / 12h` : '<span class="text-emerald-600 font-medium">12h Available</span>'}
+              </div>
+            </div>
+          `);
+        }
+      }
+
+      container.innerHTML = `
+        <div class="grid grid-cols-7 gap-2 text-center text-[11px] font-bold text-slate-500 mb-2">
+          <div class="text-rose-500">Sun (Closed)</div>
+          <div>Mon</div>
+          <div>Tue</div>
+          <div>Wed</div>
+          <div>Thu</div>
+          <div>Fri</div>
+          <div>Sat</div>
+        </div>
+        <div class="grid grid-cols-7 gap-2">
+          ${cells.join('')}
+        </div>
+      `;
+
+      container.querySelectorAll('[data-month-date]').forEach(cell => {
+        cell.addEventListener('click', () => {
+          document.getElementById('scheduleDateInput').value = cell.getAttribute('data-month-date');
+          switchCalendarMode('daily');
+        });
+      });
+    }
+
+    // =========================================================================
+    // RENDER EYE SURGEON PROFILE & PAYOUT LEDGER (Q8 & Q9)
+    // =========================================================================
+    function renderSurgeonProfilesAndPayouts() {
+      const doctorUsers = users.filter(u => u.role === 'DOCTOR');
+      const selectEl = document.getElementById('profileDoctorSelect');
+      const cardEl = document.getElementById('surgeonProfileDetailCard');
+      const tbody = document.getElementById('payoutTableBody');
+      if (!selectEl || !cardEl || !tbody || !loggedInUser) return;
+
+      const currentSelectedDocId = selectEl.value || (loggedInUser.role === 'DOCTOR' ? loggedInUser.id : (doctorUsers[0]?.id || 'DOC-01'));
+      selectEl.innerHTML = `
+        <option value="ALL_DOCTORS" ${currentSelectedDocId === 'ALL_DOCTORS' ? 'selected' : ''}>All Approved Eye Surgeons</option>
+        ${doctorUsers.map(d => `<option value="${d.id}" ${d.id === currentSelectedDocId ? 'selected' : ''}>${d.name} (${d.doctorCode} • ${d.sharePct}%)</option>`).join('')}
+      `;
+
+      const activeDocId = loggedInUser.role === 'DOCTOR'
+        ? loggedInUser.id
+        : (selectEl.value === 'ALL_DOCTORS' ? doctorUsers[0]?.id : selectEl.value);
+
+      const docProfile = doctorUsers.find(d => d.id === activeDocId) || doctorUsers[0];
+      if (!docProfile) return;
+
+      const docCases = bookings.filter(b => b.doctorId === docProfile.id);
+      const paidCasesCount = docCases.filter(b => b.paidStatus === 'PAID').length;
+      const unpaidCasesCount = docCases.length - paidCasesCount;
+
+      cardEl.innerHTML = `
+        <div class="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4 border-b border-slate-100 pb-4">
+          <div class="flex items-center gap-4">
+            <img src="${docProfile.avatar}" alt="${docProfile.name}" onerror="this.src='https://placehold.co/100x100/0f766e/ffffff?text=DR'" class="w-16 h-16 rounded-2xl object-cover border-2 border-teal-500 shadow-xs" />
+            <div>
+              <div class="flex flex-wrap items-center gap-2">
+                <h3 class="text-base sm:text-lg font-extrabold text-slate-900">${docProfile.name}</h3>
+                <span class="px-2.5 py-0.5 rounded-full text-xs font-mono font-bold bg-slate-100 text-slate-800">${docProfile.doctorCode}</span>
+                <span class="px-2.5 py-0.5 rounded-full text-xs font-bold bg-emerald-100 text-emerald-800">${docProfile.status}</span>
+              </div>
+              <p class="text-xs text-slate-500 mt-1">Affiliated Clinic/Hospital: <strong>${docProfile.clinic}</strong></p>
+              <p class="text-xs text-slate-500">Account Created: ${docProfile.createdAt || '2025-01-10'}</p>
+            </div>
+          </div>
+
+          <div class="flex flex-wrap items-center gap-3">
+            <div class="px-4 py-2.5 rounded-2xl bg-teal-50 border border-teal-200 text-right">
+              <div class="text-[11px] font-bold text-teal-700">Negotiated Surgeon Share</div>
+              <div class="text-2xl font-extrabold text-teal-900">${docProfile.sharePct}% <span class="text-xs font-semibold">of gross fee</span></div>
+            </div>
+            ${
+              loggedInUser.role === 'ADMIN'
+                ? `<button type="button" id="editCurrentDoctorBtn" class="px-3.5 py-2 rounded-xl text-xs font-bold bg-slate-900 hover:bg-slate-800 text-white transition">Edit Profile &amp; % Share</button>`
+                : ''
+            }
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 pt-4 text-xs">
+          <div class="p-3 rounded-xl bg-slate-50 border border-slate-200/70 space-y-1">
+            <div class="font-bold text-slate-500 uppercase text-[10px]">Contact &amp; Credentials</div>
+            <div><strong>Login Phone:</strong> <span class="font-mono">${docProfile.phone}</span></div>
+            <div><strong>Email:</strong> ${docProfile.email}</div>
+            <div><strong>Medical License:</strong> ${docProfile.licenseNumber}</div>
+            <div><strong>Authority:</strong> ${docProfile.licenseAuthority}</div>
+          </div>
+
+          <div class="p-3 rounded-xl bg-slate-50 border border-slate-200/70 space-y-1">
+            <div class="font-bold text-slate-500 uppercase text-[10px]">Scope of Practice &amp; Banking</div>
+            <div><strong>Qualified Surgeries:</strong> ${docProfile.capabilities}</div>
+            <div><strong>Payout Method:</strong> <span class="text-teal-800 font-bold">${docProfile.paymentMethod}</span></div>
+          </div>
+
+          <div class="p-3 rounded-xl bg-slate-50 border border-slate-200/70 space-y-1">
+            <div class="font-bold text-slate-500 uppercase text-[10px]">Case Volume &amp; Settlement Summary</div>
+            <div><strong>Total Cases Booked:</strong> ${docCases.length} Cases</div>
+            <div class="text-emerald-700 font-bold">• Settled &amp; Paid: ${paidCasesCount} Cases</div>
+            <div class="text-amber-700 font-bold">• Pending Settlement: ${unpaidCasesCount} Cases</div>
+          </div>
+        </div>
+      `;
+
+      const editBtn = document.getElementById('editCurrentDoctorBtn');
+      if (editBtn) {
+        editBtn.addEventListener('click', () => openDoctorProfileModal(docProfile));
+      }
+
+      // Filter Payout Ledger Rows
+      const payoutStatusFilter = document.getElementById('payoutStatusFilter')?.value || 'ALL';
+      const paidDateFilter = document.getElementById('payoutPaidDateFilter')?.value || '';
+
+      const visiblePayoutBookings = bookings.filter(b => {
+        if (loggedInUser.role === 'DOCTOR' && b.doctorId !== loggedInUser.id) return false;
+        if (loggedInUser.role === 'ADMIN' && selectEl.value !== 'ALL_DOCTORS' && b.doctorId !== selectEl.value) return false;
+        if (payoutStatusFilter !== 'ALL' && b.paidStatus !== payoutStatusFilter) return false;
+        if (paidDateFilter && b.paidDate !== paidDateFilter) return false;
+        return true;
+      }).sort((a, b) => (b.date > a.date ? 1 : -1));
+
+      if (visiblePayoutBookings.length === 0) {
+        tbody.innerHTML = `
+          <tr>
+            <td colspan="8" class="py-6 text-center text-slate-400 text-xs">No payout records matching the current filter criteria.</td>
+          </tr>
+        `;
+        return;
+      }
+
+      tbody.innerHTML = visiblePayoutBookings.map(b => {
+        const docObj = doctorUsers.find(d => d.id === b.doctorId) || docProfile;
+        const pct = Number(docObj?.sharePct || 70);
+        const gross = Number(b.totalFee || 0);
+        const docShare = Math.round((gross * pct) / 100);
+        const isPaid = b.paidStatus === 'PAID';
+
+        return `
+          <tr class="hover:bg-slate-50 transition">
+            <td class="py-3 px-4 font-bold text-slate-900">${b.date} <span class="text-teal-700">(${b.bed})</span></td>
+            <td class="py-3 px-4 font-semibold text-slate-800">${b.doctorName}</td>
+            <td class="py-3 px-4">
+              <div class="font-bold text-slate-900">${b.patientName}</div>
+              <div class="text-[11px] text-slate-500">${b.surgeryType} (${b.eyeSide})</div>
+            </td>
+            <td class="py-3 px-4 text-right font-bold text-slate-900">$${gross.toLocaleString()}</td>
+            <td class="py-3 px-4 text-right font-bold text-teal-700">${pct}%</td>
+            <td class="py-3 px-4 text-right font-extrabold text-emerald-700">$${docShare.toLocaleString()}</td>
+            <td class="py-3 px-4 text-center">
+              <label class="inline-flex items-center gap-1.5 cursor-pointer">
+                <input
+                  type="checkbox"
+                  data-tick-paid="${b.id}"
+                  ${isPaid ? 'checked' : ''}
+                  ${loggedInUser.role !== 'ADMIN' ? 'disabled' : ''}
+                  class="w-4 h-4 rounded text-teal-600 focus:ring-teal-500 cursor-pointer"
+                />
+                <span class="px-2 py-0.5 rounded-full text-[10px] font-extrabold ${
+                  isPaid ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800'
+                }">
+                  ${isPaid ? 'Paid' : 'Unpaid'}
+                </span>
+              </label>
+            </td>
+            <td class="py-3 px-4">
+              <input
+                type="date"
+                data-paid-date-input="${b.id}"
+                value="${b.paidDate || ''}"
+                ${loggedInUser.role !== 'ADMIN' ? 'disabled' : ''}
+                class="px-2 py-1 text-xs border border-slate-200 rounded-lg bg-white"
+              />
+            </td>
+          </tr>
+        `;
+      }).join('');
+
+      tbody.querySelectorAll('[data-tick-paid]').forEach(chk => {
+        chk.addEventListener('change', async () => {
+          const caseId = chk.getAttribute('data-tick-paid');
+          const target = bookings.find(x => x.id === caseId);
+          if (!target) return;
+          const nowPaid = chk.checked;
+          const updated = {
+            ...target,
+            paidStatus: nowPaid ? 'PAID' : 'UNPAID',
+            paidDate: nowPaid ? (target.paidDate || getSelectedDate()) : ''
+          };
+          if (!await persistBooking(updated)) return;
+          if (!await appendAuditLog(
+            'PAID_SETTLEMENT',
+            `${nowPaid ? 'Marked payout settled' : 'Unchecked payout status'} for case ${updated.id} (${updated.doctorName}) on ${updated.paidDate || '-'}`
+          )) return;
+          showToast(nowPaid ? `Marked settled on date ${updated.paidDate}` : 'Marked unpaid');
+        });
+      });
+
+      tbody.querySelectorAll('[data-paid-date-input]').forEach(inp => {
+        inp.addEventListener('change', async () => {
+          const caseId = inp.getAttribute('data-paid-date-input');
+          const target = bookings.find(x => x.id === caseId);
+          if (!target) return;
+          const newDate = inp.value;
+          const updated = {
+            ...target,
+            paidDate: newDate,
+            paidStatus: newDate ? 'PAID' : 'UNPAID'
+          };
+          if (!await persistBooking(updated)) return;
+          showToast(`Updated settlement paid date to ${newDate || 'Unpaid'}`);
+        });
+      });
+    }
+
+    // =========================================================================
+    // RENDER STATISTICS & REVENUE ANALYTICS (Q10)
+    // =========================================================================
+    function renderAnalyticsTab() {
+      const byDocEl = document.getElementById('statsByDoctorContainer');
+      const byProcEl = document.getElementById('statsByProcedureContainer');
+      if (!byDocEl || !byProcEl || !loggedInUser) return;
+
+      const doctorUsers = users.filter(u => u.role === 'DOCTOR');
+      const visibleDocs = loggedInUser.role === 'ADMIN'
+        ? doctorUsers
+        : doctorUsers.filter(d => d.id === loggedInUser.id);
+
+      byDocEl.innerHTML = visibleDocs.map(docUser => {
+        const cases = bookings.filter(b => b.doctorId === docUser.id);
+        const totalHours = cases.reduce((s, b) => s + Number(b.duration || 0), 0);
+        const grossRev = cases.reduce((s, b) => s + Number(b.totalFee || 0), 0);
+        const docCut = Math.round((grossRev * Number(docUser.sharePct || 70)) / 100);
+        const ppecNet = grossRev - docCut;
+
+        return `
+          <div class="p-3.5 rounded-xl border border-slate-200 bg-slate-50/70 space-y-2">
+            <div class="flex items-center justify-between">
+              <div>
+                <div class="font-extrabold text-sm text-slate-900">${docUser.name}</div>
+                <div class="text-[11px] text-slate-500">${docUser.doctorCode} • Negotiated Share: ${docUser.sharePct}%</div>
+              </div>
+              <span class="px-2.5 py-1 rounded-full text-xs font-extrabold bg-teal-100 text-teal-800">${cases.length} Cases (${totalHours}h)</span>
+            </div>
+            <div class="grid grid-cols-3 gap-2 pt-2 border-t border-slate-200/80 text-xs">
+              <div>
+                <span class="text-slate-500 block text-[10px]">Gross Patient Revenue</span>
+                <span class="font-extrabold text-slate-900">$${grossRev.toLocaleString()}</span>
+              </div>
+              <div>
+                <span class="text-slate-500 block text-[10px]">Surgeon Payout (${docUser.sharePct}%)</span>
+                <span class="font-extrabold text-emerald-700">$${docCut.toLocaleString()}</span>
+              </div>
+              <div>
+                <span class="text-slate-500 block text-[10px]">PPEC Facility Revenue</span>
+                <span class="font-extrabold text-indigo-700">$${ppecNet.toLocaleString()}</span>
+              </div>
+            </div>
+          </div>
+        `;
+      }).join('');
+
+      const scopedBookings = loggedInUser.role === 'ADMIN'
+        ? bookings
+        : bookings.filter(b => b.doctorId === loggedInUser.id);
+
+      byProcEl.innerHTML = Object.keys(SURGERY_TYPES).map(typeKey => {
+        const list = scopedBookings.filter(b => b.surgeryType === typeKey);
+        const hrs = list.reduce((s, b) => s + Number(b.duration || 0), 0);
+        const rev = list.reduce((s, b) => s + Number(b.totalFee || 0), 0);
+        return `
+          <div class="p-3.5 rounded-xl border border-slate-200 bg-slate-50/70 flex items-center justify-between">
+            <div>
+              <div class="font-extrabold text-sm text-slate-900">${SURGERY_TYPES[typeKey].label}</div>
+              <div class="text-xs text-slate-500">Cumulative Time: ${hrs} hours • Gross Total: $${rev.toLocaleString()}</div>
+            </div>
+            <span class="px-3 py-1 rounded-full text-xs font-extrabold bg-blue-100 text-blue-800">${list.length} Cases</span>
+          </div>
+        `;
+      }).join('');
+    }
+
+    // =========================================================================
+    // RENDER AUDIT LOGS (Q11)
+    // =========================================================================
+    function renderAuditLogs() {
+      const container = document.getElementById('auditLogListContainer');
+      if (!container || !loggedInUser) return;
+
+      const visibleLogs = loggedInUser.role === 'ADMIN'
+        ? auditLogs
+        : auditLogs.filter(l => l.actorName === loggedInUser.name);
+
+      if (visibleLogs.length === 0) {
+        container.innerHTML = `<div class="p-6 text-center text-xs text-slate-400">No modification or cancellation records found.</div>`;
+        return;
+      }
+
+      container.innerHTML = visibleLogs.map(item => `
+        <div class="px-5 py-3.5 flex items-start justify-between gap-4 text-xs hover:bg-slate-50">
+          <div class="space-y-0.5">
+            <div class="flex items-center gap-2">
+              <span class="px-2 py-0.5 rounded font-extrabold text-[10px] ${
+                item.action === 'DELETED' ? 'bg-rose-100 text-rose-800' : 'bg-teal-100 text-teal-800'
+              }">${item.action}</span>
+              <span class="font-bold text-slate-900">${item.actorName} (${item.actorRole})</span>
+            </div>
+            <p class="text-slate-600">${item.details}</p>
+          </div>
+          <span class="shrink-0 font-mono text-[11px] text-slate-400">${item.timestamp}</span>
+        </div>
+      `).join('');
+    }
+
+    function renderAll() {
+      if (!loggedInUser) return;
+      renderKPIsAndDateBar();
+      renderDailyView();
+      renderWeeklyView();
+      renderMonthlyView();
+      renderSurgeonProfilesAndPayouts();
+      renderAnalyticsTab();
+      renderAuditLogs();
+    }
+
+    // =========================================================================
+    // BOOKING MODAL WORKFLOW (Q3, Q4, Q5, Q6, Q11)
+    // =========================================================================
+    function populateDoctorSelectInModal(selectedDocId) {
+      const selectEl = document.getElementById('formDoctorId');
+      if (!selectEl || !loggedInUser) return;
+      const approvedDocs = users.filter(u => u.role === 'DOCTOR' && u.status === 'Approved');
+
+      if (loggedInUser.role === 'DOCTOR') {
+        selectEl.innerHTML = `<option value="${loggedInUser.id}">${loggedInUser.name} (${loggedInUser.doctorCode})</option>`;
+        selectEl.disabled = true;
+      } else {
+        selectEl.disabled = false;
+        selectEl.innerHTML = approvedDocs.map(d => `
+          <option value="${d.id}" ${d.id === selectedDocId ? 'selected' : ''}>${d.name} (${d.doctorCode})</option>
+        `).join('');
+      }
+    }
+
+    function syncDurationDropdownBySurgeryType(surgeryType, currentMinutes = null) {
+      const durSelect = document.getElementById('formDurationMinutes');
+      const feeInput = document.getElementById('formTotalFee');
+      if (!durSelect) return;
+
+      const meta = SURGERY_TYPES[surgeryType] || SURGERY_TYPES['Cataract'];
+      if (feeInput && !document.getElementById('editingBookingId').value) {
+        feeInput.value = meta.defaultFee;
+      }
+
+      if (surgeryType === 'Pterygium') {
+        durSelect.value = '30';
+      } else if (surgeryType === 'Cataract' || surgeryType === 'Eyelid surgery') {
+        durSelect.value = '60';
+      } else if (surgeryType === 'Other surgery') {
+        durSelect.value = currentMinutes ? String(currentMinutes) : '60';
+      }
+      refreshModalSuggestedSlots();
+    }
+
+    function refreshModalSuggestedSlots() {
+      const box = document.getElementById('modalSuggestedSlotsContainer');
+      if (!box) return;
+      const dateStr = document.getElementById('formDate').value || getSelectedDate();
+      const durMins = parseInt(document.getElementById('formDurationMinutes').value || '60', 10);
+      const editingId = document.getElementById('editingBookingId').value || '';
+
+      if (isSundayDate(dateStr)) {
+        box.innerHTML = `<span class="text-xs font-bold text-rose-600">Operating Suites are closed on Sundays (Please choose Monday–Saturday)</span>`;
+        return;
+      }
+
+      const slots = findAvailableSlotsForDate(dateStr, durMins, editingId);
+      if (slots.length === 0) {
+        box.innerHTML = `<span class="text-xs text-rose-600 font-semibold">No available slots open for ${durMins} minutes on this date.</span>`;
+        return;
+      }
+
+      const currentBed = document.getElementById('formBed').value;
+      const currentStart = parseFloat(document.getElementById('formStartHour').value);
+
+      box.innerHTML = slots.map(s => {
+        const isPicked = s.bed === currentBed && s.startHour === currentStart;
+        return `
+          <button
+            type="button"
+            data-suggest-bed="${s.bed}"
+            data-suggest-hour="${s.startHour}"
+            class="px-2.5 py-1 rounded-lg text-[11px] font-bold border transition ${
+              isPicked
+                ? 'bg-teal-600 text-white border-teal-700 shadow-xs'
+                : 'bg-white hover:bg-teal-100 text-teal-900 border-teal-300'
+            }"
+          >
+            ${s.bed} • ${formatHour24(s.startHour)}–${formatHour24(s.endHour)}
+          </button>
+        `;
+      }).join('');
+
+      box.querySelectorAll('[data-suggest-bed]').forEach(btn => {
+        btn.addEventListener('click', () => {
+          document.getElementById('formBed').value = btn.getAttribute('data-suggest-bed');
+          document.getElementById('formStartHour').value = btn.getAttribute('data-suggest-hour');
+          refreshModalSuggestedSlots();
+        });
+      });
+    }
+
+    function openNewBookingModal(prefill = {}) {
+      document.getElementById('editingBookingId').value = '';
+      setText('bookingModalTitle', 'Book Eye Operating Bed');
+
+      let targetDate = prefill.date || getSelectedDate();
+      document.getElementById('formDate').value = targetDate;
+      document.getElementById('formBed').value = prefill.bed || 'A Zeiss';
+      document.getElementById('formSurgeryType').value = 'Cataract';
+      document.getElementById('formDurationMinutes').value = '60';
+      document.getElementById('formEyeSide').value = 'RE';
+      document.getElementById('formPatientLink').value = `https://ppec.pethyoeung.com/backend/patient/${Math.floor(11020 + Math.random() * 890)}`;
+      document.getElementById('formPatientName').value = '';
+      document.getElementById('formPatientPhone').value = '';
+      document.getElementById('formTotalFee').value = '650';
+      document.getElementById('formStatus').value = 'Confirmed';
+      document.getElementById('formNotes').value = '';
+
+      populateDoctorSelectInModal(loggedInUser?.role === 'DOCTOR' ? loggedInUser.id : 'DOC-01');
+
+      const freeSlots = findAvailableSlotsForDate(targetDate, 60);
+      if (prefill.startHour !== undefined) {
+        document.getElementById('formStartHour').value = String(prefill.startHour);
+      } else if (freeSlots.length > 0) {
+        document.getElementById('formBed').value = freeSlots[0].bed;
+        document.getElementById('formStartHour').value = String(freeSlots[0].startHour);
+      } else {
+        document.getElementById('formStartHour').value = '8';
+      }
+
+      refreshModalSuggestedSlots();
+      document.getElementById('deleteBookingBtn').classList.add('hidden');
+      document.getElementById('bookingAlertBanner').classList.add('hidden');
+      document.getElementById('bookingModal').classList.remove('hidden');
+    }
+
+    function openEditBookingModal(bookingId) {
+      const b = bookings.find(x => x.id === bookingId);
+      if (!b) return;
+      if (!canViewBookingDetails(b)) {
+        showToast('You do not have authorization to view or edit this booking (Q7 Privacy).');
+        return;
+      }
+
+      document.getElementById('editingBookingId').value = b.id;
+      setText('bookingModalTitle', `Edit Booking ${b.id} (${b.bed})`);
+      document.getElementById('formDate').value = b.date;
+      document.getElementById('formBed').value = b.bed;
+      document.getElementById('formStartHour').value = String(b.startHour);
+      document.getElementById('formSurgeryType').value = b.surgeryType;
+      document.getElementById('formDurationMinutes').value = String(b.durationMinutes);
+      document.getElementById('formEyeSide').value = b.eyeSide;
+      document.getElementById('formPatientLink').value = b.patientLink;
+      document.getElementById('formPatientName').value = b.patientName;
+      document.getElementById('formPatientPhone').value = b.patientPhone;
+      document.getElementById('formTotalFee').value = String(b.totalFee || 500);
+      document.getElementById('formStatus').value = b.status;
+      document.getElementById('formNotes').value = b.notes || '';
+
+      populateDoctorSelectInModal(b.doctorId);
+      refreshModalSuggestedSlots();
+
+      document.getElementById('deleteBookingBtn').classList.remove('hidden');
+      document.getElementById('bookingAlertBanner').classList.add('hidden');
+      document.getElementById('bookingModal').classList.remove('hidden');
+    }
+
+    function showBookingAlert(msg) {
+      const banner = document.getElementById('bookingAlertBanner');
+      setText('bookingAlertText', msg);
+      if (banner) banner.classList.remove('hidden');
+    }
+
+    // =========================================================================
+    // DOCTOR PROFILE MODAL (Admin Create / Edit Approved Doctor — Q1, Q8)
+    // =========================================================================
+    function nextDoctorProfileId() {
+      let number = 1;
+      while (users.some(user => user.id === `DOC-${String(number).padStart(2, '0')}`)) number += 1;
+      return `DOC-${String(number).padStart(2, '0')}`;
+    }
+
+    function nextDoctorCode() {
+      let number = 1;
+      while (users.some(user => user.doctorCode === `DR-PPEC-${String(number).padStart(3, '0')}`)) number += 1;
+      return `DR-PPEC-${String(number).padStart(3, '0')}`;
+    }
+
+    function openDoctorProfileModal(docObj = null) {
+      if (docObj) {
+        document.getElementById('editDoctorInternalId').value = docObj.id;
+        document.getElementById('docNameInput').value = docObj.name;
+        document.getElementById('docCodeInput').value = docObj.doctorCode;
+        document.getElementById('docPhoneInput').value = docObj.phone;
+        document.getElementById('docEmailInput').value = docObj.email;
+        document.getElementById('docLicenseInput').value = docObj.licenseNumber || '';
+        document.getElementById('docAuthorityInput').value = docObj.licenseAuthority || '';
+        document.getElementById('docClinicInput').value = docObj.clinic || '';
+        document.getElementById('docCapabilitiesInput').value = docObj.capabilities || '';
+        document.getElementById('docSharePctInput').value = String(docObj.sharePct || 70);
+        document.getElementById('docBankInput').value = docObj.paymentMethod || '';
+        document.getElementById('docStatusInput').value = docObj.status || 'Approved';
+      } else {
+        document.getElementById('editDoctorInternalId').value = '';
+        document.getElementById('docNameInput').value = '';
+        document.getElementById('docCodeInput').value = nextDoctorCode();
+        document.getElementById('docPhoneInput').value = '';
+        document.getElementById('docEmailInput').value = '';
+        document.getElementById('docLicenseInput').value = `MCC-OPH-2026-0${Math.floor(100 + Math.random() * 899)}`;
+        document.getElementById('docAuthorityInput').value = 'Medical Council of Cambodia (MCC)';
+        document.getElementById('docClinicInput').value = 'PPEC Eye Surgical Center';
+        document.getElementById('docCapabilitiesInput').value = 'Cataract, Pterygium, Eyelid surgery, Other surgery';
+        document.getElementById('docSharePctInput').value = '70';
+        document.getElementById('docBankInput').value = 'ABA Bank • USD Account';
+        document.getElementById('docStatusInput').value = 'Approved';
+      }
+      document.getElementById('doctorProfileModal').classList.remove('hidden');
+    }
+
+    function switchCalendarMode(mode) {
+      activeCalendarMode = mode;
+      document.querySelectorAll('.cal-mode-btn').forEach(btn => {
+        const isMatch = btn.getAttribute('data-cal-mode') === mode;
+        btn.className = isMatch
+          ? 'cal-mode-btn px-3 py-1.5 rounded-lg text-xs font-bold bg-teal-600 text-white shadow-xs transition'
+          : 'cal-mode-btn px-3 py-1.5 rounded-lg text-xs font-bold text-slate-600 hover:text-slate-900 transition';
+      });
+      document.getElementById('dailyCalendarSection').classList.toggle('hidden', mode !== 'daily');
+      document.getElementById('weeklyCalendarSection').classList.toggle('hidden', mode !== 'weekly');
+      document.getElementById('monthlyCalendarSection').classList.toggle('hidden', mode !== 'monthly');
+      renderAll();
+    }
+
+    // =========================================================================
+    // EVENT LISTENERS INITIALIZATION
+    // =========================================================================
+    document.addEventListener('DOMContentLoaded', () => {
+      renderQuickLoginAccounts();
+      initCloudSync();
+
+      // Login Form
+      document.getElementById('loginForm').addEventListener('submit', handleLoginSubmit);
+
+      // Logout / Switch Account
+      document.getElementById('logoutBtn').addEventListener('click', async () => {
+        cloudUnsubscribers.forEach(unsubscribe => unsubscribe());
+        cloudUnsubscribers = [];
+        isCloudConnected = false;
+        loggedInUser = null;
+        firebaseUser = null;
+        users = [];
+        bookings = [];
+        auditLogs = [];
+        if (auth) {
+          try {
+            await signOut(auth);
+          } catch (error) {
+            reportCloudError('Firebase sign-out failed:', error);
+          }
+        }
+        setText('cloudSyncText', 'FIREBASE READY • SIGN IN');
+        document.getElementById('loginGateOverlay').classList.remove('hidden');
+      });
+
+      // First-Login Password Change Modal (Q2)
+      document.getElementById('changePasswordForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const newPass = document.getElementById('newPasswordInput').value;
+        if (!newPass || !loggedInUser || !firebaseUser) return;
+        try {
+          await updatePassword(firebaseUser, newPass);
+          const updatedUser = { ...loggedInUser, mustChangePassword: false };
+          if (!await persistUserRecord(updatedUser)) return;
+          loggedInUser = updatedUser;
+          document.getElementById('changePasswordModal').classList.add('hidden');
+          showToast('Password updated successfully!');
+        } catch (error) {
+          console.error('Firebase password update failed:', error);
+          showToast('Password update failed. Sign in again and retry.');
+        }
+      });
+
+      document.getElementById('skipPasswordChangeBtn').addEventListener('click', () => {
+        document.getElementById('changePasswordModal').classList.add('hidden');
+      });
+
+      // Main Navigation Tabs
+      document.querySelectorAll('.main-tab-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          activeMainTab = btn.getAttribute('data-main-tab');
+          document.querySelectorAll('.main-tab-btn').forEach(b => {
+            b.className = 'main-tab-btn px-3.5 py-2 rounded-lg text-xs sm:text-sm font-bold text-slate-600 hover:text-slate-900 transition';
+          });
+          btn.className = 'main-tab-btn px-3.5 py-2 rounded-lg text-xs sm:text-sm font-bold bg-white text-slate-900 shadow-sm transition';
+
+          document.getElementById('tabCalendarContent').classList.toggle('hidden', activeMainTab !== 'calendar');
+          document.getElementById('calendarModeContainer').classList.toggle('hidden', activeMainTab !== 'calendar');
+          document.getElementById('tabProfilesContent').classList.toggle('hidden', activeMainTab !== 'profiles');
+          document.getElementById('tabAnalyticsContent').classList.toggle('hidden', activeMainTab !== 'analytics');
+          document.getElementById('tabAuditContent').classList.toggle('hidden', activeMainTab !== 'audit');
+          renderAll();
+        });
+      });
+
+      // Calendar Mode Sub-Tabs (Daily / Weekly / Monthly)
+      document.querySelectorAll('.cal-mode-btn').forEach(btn => {
+        btn.addEventListener('click', () => switchCalendarMode(btn.getAttribute('data-cal-mode')));
+      });
+
+      // Month Navigation
+      document.getElementById('prevMonthBtn').addEventListener('click', () => {
+        currentMonthYear.month -= 1;
+        if (currentMonthYear.month < 0) {
+          currentMonthYear.month = 11;
+          currentMonthYear.year -= 1;
+        }
+        renderMonthlyView();
+      });
+      document.getElementById('nextMonthBtn').addEventListener('click', () => {
+        currentMonthYear.month += 1;
+        if (currentMonthYear.month > 11) {
+          currentMonthYear.month = 0;
+          currentMonthYear.year += 1;
+        }
+        renderMonthlyView();
+      });
+
+      // Date Navigator
+      const dateInput = document.getElementById('scheduleDateInput');
+      dateInput.addEventListener('change', renderAll);
+
+      document.getElementById('prevDayBtn').addEventListener('click', () => {
+        const d = parseDateParts(dateInput.value);
+        d.setDate(d.getDate() - 1);
+        dateInput.value = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+        renderAll();
+      });
+
+      document.getElementById('nextDayBtn').addEventListener('click', () => {
+        const d = parseDateParts(dateInput.value);
+        d.setDate(d.getDate() + 1);
+        dateInput.value = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+        renderAll();
+      });
+
+      document.getElementById('todayBtn').addEventListener('click', () => {
+        dateInput.value = DEFAULT_TODAY;
+        renderAll();
+      });
+
+      // Filters & Search
+      document.getElementById('searchInput').addEventListener('input', renderAll);
+      document.getElementById('bedFilter').addEventListener('change', renderAll);
+      document.getElementById('surgeryTypeFilter').addEventListener('change', renderAll);
+      document.getElementById('statusFilter').addEventListener('change', renderAll);
+
+      // Profile & Payout Filters
+      document.getElementById('profileDoctorSelect').addEventListener('change', renderSurgeonProfilesAndPayouts);
+      document.getElementById('payoutStatusFilter').addEventListener('change', renderSurgeonProfilesAndPayouts);
+      document.getElementById('payoutPaidDateFilter').addEventListener('change', renderSurgeonProfilesAndPayouts);
+      document.getElementById('clearPaidDateFilterBtn').addEventListener('click', () => {
+        document.getElementById('payoutPaidDateFilter').value = '';
+        renderSurgeonProfilesAndPayouts();
+      });
+
+      // Open Booking Modal
+      document.getElementById('newBookingBtn').addEventListener('click', () => openNewBookingModal({ date: getSelectedDate() }));
+      document.getElementById('closeBookingModalBtn').addEventListener('click', () => document.getElementById('bookingModal').classList.add('hidden'));
+      document.getElementById('cancelBookingModalBtn').addEventListener('click', () => document.getElementById('bookingModal').classList.add('hidden'));
+
+      // Dynamic form listeners inside Booking Modal (Q4 & Q5)
+      document.getElementById('formSurgeryType').addEventListener('change', (e) => {
+        syncDurationDropdownBySurgeryType(e.target.value);
+      });
+      document.getElementById('formDurationMinutes').addEventListener('change', refreshModalSuggestedSlots);
+      document.getElementById('formDate').addEventListener('change', refreshModalSuggestedSlots);
+      document.getElementById('formBed').addEventListener('change', refreshModalSuggestedSlots);
+      document.getElementById('formStartHour').addEventListener('change', refreshModalSuggestedSlots);
+
+      // Submit Booking Form
+      document.getElementById('bookingForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const editingId = document.getElementById('editingBookingId').value;
+        const dateVal = document.getElementById('formDate').value;
+        const bedVal = document.getElementById('formBed').value;
+        const startHourVal = parseFloat(document.getElementById('formStartHour').value);
+        const durMins = parseInt(document.getElementById('formDurationMinutes').value, 10);
+        const durHours = durMins / 60;
+        const patientPhone = document.getElementById('formPatientPhone').value.trim();
+
+        // 1. Validate Monday–Saturday (Q3)
+        if (isSundayDate(dateVal)) {
+          showBookingAlert('Suites operate Monday through Saturday only (Sundays are closed).');
+          return;
+        }
+
+        // 2. Validate Patient Phone is filled (Q6)
+        if (!patientPhone) {
+          showBookingAlert('Patient phone number is mandatory (* Required).');
+          return;
+        }
+
+        // 3. Validate Session Operating Hours 08:00–11:00 or 14:00–17:00 (Q3)
+        if (!isSlotRangeValidWithinSession(startHourVal, durHours)) {
+          showBookingAlert('Selected surgery time falls outside operating shifts (Morning: 08:00–11:00 AM or Afternoon: 02:00–05:00 PM).');
+          return;
+        }
+
+        // 4. Validate Q11 Advance Booking Rule (> 2 days in advance for Doctors unless Admin)
+        const enforceLead = document.getElementById('enforceLeadTimeCheckbox')?.checked ?? true;
+        const diffDays = getDayDifferenceFromToday(dateVal);
+        if (!editingId && loggedInUser.role === 'DOCTOR' && enforceLead && diffDays <= 2) {
+          showBookingAlert('Surgeons must schedule bookings at least > 2 days in advance (Policy Q11). Please contact Admin for urgent exceptions.');
+          return;
+        }
+
+        // 5. Check Bed Conflict
+        const conflict = checkBedConflict(dateVal, bedVal, startHourVal, durHours, editingId);
+        if (conflict) {
+          showBookingAlert(`${bedVal} is already occupied between ${formatHour24(conflict.startHour)}–${formatHour24(conflict.startHour + conflict.duration)}. Please choose an alternate slot.`);
+          return;
+        }
+
+        const docId = document.getElementById('formDoctorId').value;
+        const docObj = users.find(u => u.id === docId) || loggedInUser;
+        const existingRecord = bookings.find(b => b.id === editingId);
+
+        const payload = {
+          id: editingId || `BK-${Math.floor(1010 + Math.random() * 8900)}`,
+          date: dateVal,
+          bed: bedVal,
+          startHour: startHourVal,
+          durationMinutes: durMins,
+          duration: durHours,
+          surgeryType: document.getElementById('formSurgeryType').value,
+          eyeSide: document.getElementById('formEyeSide').value,
+          patientLink: document.getElementById('formPatientLink').value.trim(),
+          patientName: document.getElementById('formPatientName').value.trim(),
+          patientPhone,
+          totalFee: parseFloat(document.getElementById('formTotalFee').value || '500'),
+          doctorId: docObj.id,
+          doctorName: docObj.name,
+          status: document.getElementById('formStatus').value,
+          notes: document.getElementById('formNotes').value.trim(),
+          paidStatus: existingRecord ? existingRecord.paidStatus : 'UNPAID',
+          paidDate: existingRecord ? existingRecord.paidDate : ''
+        };
+
+        document.getElementById('scheduleDateInput').value = payload.date;
+        document.getElementById('bookingModal').classList.add('hidden');
+
+        if (!await persistBooking(payload)) return;
+        if (!await appendAuditLog(
+          editingId ? 'MODIFIED' : 'CREATED',
+          `${editingId ? 'Updated booking' : 'Booked new case'} ${payload.id} on ${payload.bed} on ${payload.date} at ${formatHour24(payload.startHour)} (${payload.surgeryType} - ${payload.patientName})`
+        )) return;
+        showToast(`Saved booking on ${payload.bed} for ${payload.date} at ${formatHour24(payload.startHour)}`);
+      });
+
+      // Delete / Cancel Booking with Q11 Deadline Rule (< 1 day cannot be cancelled by Doctor)
+      document.getElementById('deleteBookingBtn').addEventListener('click', async () => {
+        const editingId = document.getElementById('editingBookingId').value;
+        const target = bookings.find(b => b.id === editingId);
+        if (!target) return;
+
+        const enforceLead = document.getElementById('enforceLeadTimeCheckbox')?.checked ?? true;
+        const diffDays = getDayDifferenceFromToday(target.date);
+        if (loggedInUser.role === 'DOCTOR' && enforceLead && diffDays < 1) {
+          showBookingAlert('Per policy Q11, surgeons cannot cancel a booking less than 1 day before surgery. Please consult the OR Administrator.');
+          return;
+        }
+
+        document.getElementById('bookingModal').classList.add('hidden');
+        if (!await removeBookingRecord(editingId)) return;
+        if (!await appendAuditLog(
+          'DELETED',
+          `Cancelled booking ${target.id} on ${target.bed} for ${target.date} at ${formatHour24(target.startHour)} (${target.patientName})`
+        )) return;
+        showToast(`Successfully cancelled booking ${target.id}`);
+      });
+
+      // Doctor Profile Modal (Admin)
+      document.getElementById('addDoctorModalBtn').addEventListener('click', () => openDoctorProfileModal(null));
+      document.getElementById('closeDoctorModalBtn').addEventListener('click', () => document.getElementById('doctorProfileModal').classList.add('hidden'));
+      document.getElementById('cancelDoctorModalBtn').addEventListener('click', () => document.getElementById('doctorProfileModal').classList.add('hidden'));
+
+      document.getElementById('doctorProfileForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const existingId = document.getElementById('editDoctorInternalId').value;
+        const submitButton = e.submitter;
+        const existingProfile = existingId ? users.find(user => user.id === existingId) : null;
+        const docObj = {
+        id: existingId || nextDoctorProfileId(),
+        authUid: existingProfile?.authUid || '',
+        role: 'DOCTOR',
+          name: document.getElementById('docNameInput').value.trim(),
+          doctorCode: document.getElementById('docCodeInput').value.trim(),
+          phone: document.getElementById('docPhoneInput').value.trim(),
+          email: document.getElementById('docEmailInput').value.trim(),
+          mustChangePassword: existingProfile?.mustChangePassword || false,
+          licenseNumber: document.getElementById('docLicenseInput').value.trim(),
+          licenseAuthority: document.getElementById('docAuthorityInput').value.trim(),
+          clinic: document.getElementById('docClinicInput').value.trim(),
+          capabilities: document.getElementById('docCapabilitiesInput').value.trim(),
+          sharePct: parseFloat(document.getElementById('docSharePctInput').value || '70'),
+          paymentMethod: document.getElementById('docBankInput').value.trim(),
+          status: document.getElementById('docStatusInput').value,
+          createdAt: DEFAULT_TODAY,
+          avatar: `https://placehold.co/120x120/0d9488/ffffff?text=DR`
+        };
+
+        if (submitButton) submitButton.disabled = true;
+        let provisioningApp = null;
+        let newlyCreatedAuthUser = null;
+        try {
+          if (existingId) {
+            if (!await persistUserRecord(docObj)) return;
+            if (!await appendAuditLog(
+              'DOCTOR_UPDATED',
+              `Admin updated profile for ${docObj.name} (${docObj.doctorCode})`
+            )) return;
+            document.getElementById('doctorProfileModal').classList.add('hidden');
+            showToast(`Saved surgeon profile for ${docObj.name}`);
+            return;
+          }
+
+          ensureCloudSession();
+          if (docObj.email.toLowerCase() === firebaseUser.email?.toLowerCase()) {
+            throw new Error('Use an email address different from the Admin account.');
+          }
+          provisioningApp = initializeApp(firebaseConfig, `doctor-provisioning-${crypto.randomUUID()}`);
+          const provisioningAuth = getAuth(provisioningApp);
+          const authCredential = await createUserWithEmailAndPassword(
+            provisioningAuth,
+            docObj.email,
+            crypto.randomUUID()
+          );
+          newlyCreatedAuthUser = authCredential.user;
+          docObj.authUid = newlyCreatedAuthUser.uid;
+
+          if (!await createUserRecord(docObj)) return;
+          newlyCreatedAuthUser = null;
+          document.getElementById('doctorProfileModal').classList.add('hidden');
+          const auditSaved = await appendAuditLog(
+            'DOCTOR_APPROVED',
+            `Admin created profile for ${docObj.name} (${docObj.doctorCode})`
+          );
+
+          try {
+            await sendPasswordResetEmail(auth, docObj.email);
+            if (docObj.status === 'Approved') {
+              showToast(auditSaved
+                ? `Doctor account created. Password setup email sent to ${docObj.email}`
+                : `Doctor account and profile created, but the audit log could not be saved. Password setup email sent to ${docObj.email}`);
+            } else {
+              showToast(auditSaved
+                ? 'Doctor account created as Suspended. Setup email sent; sign-in is blocked until approved.'
+                : 'Doctor account created as Suspended, but the audit log could not be saved. Sign-in remains blocked until approved.');
+            }
+          } catch (emailError) {
+            console.error('Doctor profile saved, but password setup email failed:', emailError);
+            showToast(`Account created, but password setup email failed: ${emailError.message || 'Check Firebase Auth email settings.'}`);
+          }
+        } catch (error) {
+          console.error('Doctor profile save failed:', error);
+          reportCloudError('Doctor profile save failed:', error);
+          if (newlyCreatedAuthUser) {
+            try {
+              await deleteUser(newlyCreatedAuthUser);
+            } catch (rollbackError) {
+              console.error('Could not remove the new Auth account after profile creation failed:', rollbackError);
+              showToast('Profile creation failed, and the unused Authentication account could not be removed. Check Authentication > Users.');
+            }
+          }
+          const message = error.code === 'auth/email-already-in-use'
+            ? 'An Authentication account already uses this email. Use a different email or update the existing doctor profile.'
+            : error.message || 'Could not create the doctor account. Check Firebase setup and try again.';
+          showToast(message);
+        } finally {
+          if (provisioningApp) {
+            try {
+              await deleteApp(provisioningApp);
+            } catch (cleanupError) {
+              console.error('Could not clean up the temporary Firebase Auth app:', cleanupError);
+            }
+          }
+          if (submitButton) submitButton.disabled = false;
+        }
+      });
+    });
+  </script>
+</body>
+</html>

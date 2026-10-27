@@ -1,0 +1,101 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function activeProfile() {
+      return signedIn()
+        && exists(/databases/$(database)/documents/ppec_user/$(request.auth.uid))
+        && get(/databases/$(database)/documents/ppec_user/$(request.auth.uid)).data.email == request.auth.token.email
+        && get(/databases/$(database)/documents/ppec_user/$(request.auth.uid)).data.status == 'Approved'
+        && get(/databases/$(database)/documents/ppec_user/$(request.auth.uid)).data.role in ['ADMIN', 'DOCTOR'];
+    }
+
+    function isAdmin() {
+      return activeProfile()
+        && get(/databases/$(database)/documents/ppec_user/$(request.auth.uid)).data.role == 'ADMIN';
+    }
+
+    function isDoctor() {
+      return activeProfile()
+        && get(/databases/$(database)/documents/ppec_user/$(request.auth.uid)).data.role == 'DOCTOR';
+    }
+
+    match /ppec_user/{profileId} {
+      allow get, list: if isAdmin()
+        || (signedIn()
+          && profileId == request.auth.uid
+          && resource.data.email == request.auth.token.email);
+
+      allow create, delete: if isAdmin();
+
+      allow update: if isAdmin()
+        || (isDoctor()
+          && profileId == request.auth.uid
+          && resource.data.email == request.auth.token.email
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['mustChangePassword'])
+          && request.resource.data.mustChangePassword == false);
+    }
+
+    match /ppec_eye_bookings/{bookingId} {
+      allow get, list: if isAdmin()
+        || (isDoctor()
+          && resource.data.doctorId == get(/databases/$(database)/documents/ppec_user/$(request.auth.uid)).data.id);
+
+      allow create: if isAdmin()
+        || (isDoctor()
+          && request.resource.data.doctorId == get(/databases/$(database)/documents/ppec_user/$(request.auth.uid)).data.id
+          && request.resource.data.paidStatus == 'UNPAID');
+
+      allow update: if isAdmin()
+        || (isDoctor()
+          && resource.data.doctorId == get(/databases/$(database)/documents/ppec_user/$(request.auth.uid)).data.id
+          && request.resource.data.doctorId == get(/databases/$(database)/documents/ppec_user/$(request.auth.uid)).data.id
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly([
+            'date',
+            'bed',
+            'startHour',
+            'durationMinutes',
+            'duration',
+            'surgeryType',
+            'eyeSide',
+            'patientLink',
+            'patientName',
+            'patientPhone',
+            'status',
+            'notes',
+            'totalFee'
+          ]));
+
+      allow delete: if isAdmin()
+        || (isDoctor()
+          && resource.data.doctorId == get(/databases/$(database)/documents/ppec_user/$(request.auth.uid)).data.id);
+    }
+
+    match /ppec_eye_logs/{logId} {
+      allow get, list: if isAdmin();
+
+      allow create: if activeProfile()
+        && request.resource.data.id == logId
+        && request.resource.data.actorUid == request.auth.uid
+        && request.resource.data.actorRole == get(/databases/$(database)/documents/ppec_user/$(request.auth.uid)).data.role;
+
+      allow update, delete: if isAdmin();
+    }
+
+    match /_ppec_doctor_codes/{documentId} {
+      allow read, write: if false;
+    }
+
+    match /_ppec_doctor_phones/{documentId} {
+      allow read, write: if false;
+    }
+
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
