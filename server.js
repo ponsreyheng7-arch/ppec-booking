@@ -44,6 +44,7 @@ const server = http.createServer((request, response) => {
   });
 });
 
+
 server.on('error', error => {
   console.error('Unable to start local web server:', error);
   process.exitCode = 1;

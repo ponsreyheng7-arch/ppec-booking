@@ -55,7 +55,7 @@
 <body class="min-h-screen flex flex-col bg-slate-50 text-slate-900">
 
   <!-- ===================================================================== -->
-  <!-- LOGIN OVERLAY GATE (Q1, Q2, Q12: Phone + Password, Default = "1")     -->
+  <!-- LOGIN OVERLAY GATE (Firebase email and password)                      -->
   <!-- ===================================================================== -->
   <div id="loginGateOverlay" class="fixed inset-0 z-50 bg-slate-950/95 backdrop-blur-md flex items-center justify-center p-4 overflow-y-auto">
     <div class="max-w-md w-full bg-white rounded-3xl shadow-2xl border border-slate-200 overflow-hidden my-6">
@@ -83,13 +83,13 @@
         </div>
 
         <div>
-          <label class="block text-xs font-bold text-slate-700 mb-1">Doctor / Admin Phone or Email *</label>
-          <input id="loginPhoneInput" type="text" required value="012888001" autocomplete="username" placeholder="e.g. 012888001 or your Firebase account email" class="w-full px-3.5 py-2.5 text-sm bg-slate-50 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500 focus:bg-white" />
+          <label class="block text-xs font-bold text-slate-700 mb-1">Doctor / Admin Phone Number or Email *</label>
+          <input id="loginPhoneInput" type="text" required autocomplete="username" placeholder="Enter your registered phone number or email" class="w-full px-3.5 py-2.5 text-sm bg-slate-50 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500 focus:bg-white" />
         </div>
 
         <div>
-          <label class="block text-xs font-bold text-slate-700 mb-1">Password *</label>
-          <input id="loginPasswordInput" type="password" required autocomplete="current-password" placeholder="Enter your Firebase password" class="w-full px-3.5 py-2.5 text-sm bg-slate-50 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500 focus:bg-white" />
+          <label class="block text-xs font-bold text-slate-700 mb-1">Password (new accounts start with "1") *</label>
+          <input id="loginPasswordInput" type="password" required autocomplete="current-password" placeholder="Enter your password" class="w-full px-3.5 py-2.5 text-sm bg-slate-50 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500 focus:bg-white" />
         </div>
 
         <button type="submit" class="w-full py-2.5 px-4 rounded-xl bg-teal-600 hover:bg-teal-500 text-white font-bold text-sm shadow-md transition flex items-center justify-center gap-2">
@@ -97,47 +97,59 @@
           <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
         </button>
 
-        <!-- Quick account selector -->
-        <div class="pt-4 border-t border-slate-200 space-y-2">
-          <div class="flex items-center justify-between text-[11px] font-bold text-slate-500 uppercase tracking-wider">
-            <span>Quick Account Selection</span>
-            <span class="text-teal-600">Select account</span>
-          </div>
-          <div id="quickLoginAccountsList" class="grid grid-cols-1 gap-1.5 max-h-48 overflow-y-auto pr-1">
-            <!-- Populated by JS -->
-          </div>
-        </div>
-        <p class="text-[11px] text-slate-500">Bookings and profiles are stored in Firebase after sign-in. You can enter your Firebase email in the phone field if it is not one of the demo accounts.</p>
+        <p class="text-[11px] text-slate-500">Sign in with your registered phone number or email. New accounts use temporary password "1" and must change it at first sign-in.</p>
       </form>
     </div>
   </div>
 
   <!-- ===================================================================== -->
-  <!-- FIRST-TIME PASSWORD CHANGE MODAL (Q2: Default Password = "1")         -->
+  <!-- FIRST-TIME PASSWORD CHANGE MODAL                                      -->
   <!-- ===================================================================== -->
   <div id="changePasswordModal" class="fixed inset-0 z-50 hidden bg-slate-900/70 backdrop-blur-xs flex items-center justify-center p-4">
     <div class="bg-white rounded-2xl max-w-md w-full border border-slate-200 shadow-2xl overflow-hidden">
       <div class="px-6 py-4 bg-amber-500 text-slate-950 flex items-center justify-between">
         <div>
           <h3 class="text-base font-extrabold">Update Your Password</h3>
-          <p class="text-xs font-medium text-slate-900">Set a new password for your Firebase account</p>
+          <p class="text-xs font-medium text-slate-900">Set a new password for your account</p>
         </div>
       </div>
       <form id="changePasswordForm" class="p-6 space-y-4">
         <p class="text-xs text-slate-600 leading-relaxed">
-          For clinical safety and privacy, update your Firebase password before continuing.
+          Choose a new password of at least 8 characters. Your phone and email sign-ins will use the same password.
         </p>
         <div>
           <label class="block text-xs font-bold text-slate-700 mb-1">New Password *</label>
-          <input id="newPasswordInput" type="password" required minlength="1" placeholder="Enter new password..." class="w-full px-3.5 py-2 text-sm border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500" />
+          <input id="newPasswordInput" type="password" required minlength="8" autocomplete="new-password" placeholder="Use at least 8 characters" class="w-full px-3.5 py-2 text-sm border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500" />
         </div>
         <div class="flex items-center justify-end gap-2 pt-2">
-          <button type="button" id="skipPasswordChangeBtn" class="px-3.5 py-2 rounded-xl text-xs font-semibold bg-slate-100 hover:bg-slate-200 text-slate-700 transition">
-            Skip for now
+          <button id="cancelChangePasswordBtn" type="button" class="px-4 py-2 rounded-xl text-xs font-semibold bg-slate-100 text-slate-700 hover:bg-slate-200 transition">
+            Cancel
           </button>
           <button type="submit" class="px-4 py-2 rounded-xl text-xs font-bold bg-teal-600 hover:bg-teal-500 text-white transition">
-            Update Password
+            Change password
           </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div id="adminResetPasswordModal" class="fixed inset-0 z-50 hidden bg-slate-900/70 backdrop-blur-xs flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl max-w-md w-full border border-slate-200 shadow-2xl overflow-hidden">
+      <div class="px-6 py-4 bg-amber-500 text-slate-950">
+        <h3 class="text-base font-extrabold">Set Doctor Password</h3>
+        <p id="adminResetPasswordDoctorName" class="text-xs font-medium text-slate-900"></p>
+      </div>
+      <form id="adminResetPasswordForm" class="p-6 space-y-4">
+        <p class="text-xs text-slate-600 leading-relaxed">
+          Enter a new password of at least 8 characters. It will replace the doctor's current password for phone and email sign-in.
+        </p>
+        <div>
+          <label class="block text-xs font-bold text-slate-700 mb-1" for="adminResetPasswordInput">New Password *</label>
+          <input id="adminResetPasswordInput" type="password" required minlength="8" maxlength="128" autocomplete="new-password" placeholder="At least 8 characters" class="w-full px-3.5 py-2 text-sm border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500" />
+        </div>
+        <div class="flex items-center justify-end gap-2 pt-2">
+          <button id="cancelAdminResetPasswordBtn" type="button" class="px-4 py-2 rounded-xl text-xs font-semibold bg-slate-100 text-slate-700 hover:bg-slate-200 transition">Cancel</button>
+          <button id="submitAdminResetPasswordBtn" type="submit" class="px-4 py-2 rounded-xl text-xs font-bold bg-teal-600 hover:bg-teal-500 text-white transition">Change password</button>
         </div>
       </form>
     </div>
@@ -177,7 +189,7 @@
           <button id="prevDayBtn" type="button" title="Previous Day" class="p-1.5 hover:bg-slate-700 rounded-lg text-slate-300 hover:text-white transition">
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
           </button>
-          <input id="scheduleDateInput" type="date" value="2026-10-15" class="bg-transparent text-xs sm:text-sm font-semibold text-white px-2 py-1 focus:outline-none cursor-pointer" />
+          <input id="scheduleDateInput" type="date" class="bg-transparent text-xs sm:text-sm font-semibold text-white px-2 py-1 focus:outline-none cursor-pointer" />
           <button id="nextDayBtn" type="button" title="Next Day" class="p-1.5 hover:bg-slate-700 rounded-lg text-slate-300 hover:text-white transition">
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
           </button>
@@ -792,7 +804,7 @@
       <div class="px-6 py-4 bg-slate-900 text-white flex items-center justify-between">
         <div>
           <h3 id="doctorModalTitle" class="text-base sm:text-lg font-extrabold">Approve / Configure Eye Surgeon Profile</h3>
-          <p class="text-xs text-slate-400">Save once to create the Firebase account and profile, then email a password setup link.</p>
+          <p class="text-xs text-slate-400">Saving creates an account with temporary password "1". The doctor must set a new password at first sign-in.</p>
         </div>
         <button id="closeDoctorModalBtn" type="button" class="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition">
           <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
@@ -823,7 +835,7 @@
             <input id="docEmailInput" type="email" required placeholder="doctor@ppec.com" class="w-full px-3 py-2 text-sm border border-slate-300 rounded-xl" />
           </div>
           <div class="flex items-center text-xs text-slate-600">
-            A new Firebase account will be created for this email. The doctor sets their password from the email link.
+            Temporary password "1"; doctors must change it at first sign-in.
           </div>
         </div>
 
@@ -867,7 +879,12 @@
           </div>
         </div>
 
+        <p class="text-[11px] text-slate-500">Admins can set a new password for the doctor. Deleting a profile removes app access; the Firebase Authentication account remains.</p>
+        <div id="doctorPasswordResetResult" role="status" aria-live="polite" class="hidden rounded-xl border border-amber-200 bg-amber-50 p-3 text-xs font-semibold text-amber-900"></div>
         <div class="pt-3 border-t border-slate-200 flex items-center justify-end gap-2">
+          <button type="button" id="deleteDoctorAccountBtn" class="hidden mr-auto px-3 py-2 rounded-xl text-xs font-bold bg-rose-100 text-rose-800 hover:bg-rose-200 transition">Delete doctor profile</button>
+          <button type="button" id="resetDoctorPasswordBtn" class="hidden px-3 py-2 rounded-xl text-xs font-bold bg-amber-100 text-amber-900 hover:bg-amber-200 transition">Reset password</button>
+          <button type="button" id="changeDoctorPasswordBtn" class="hidden px-3 py-2 rounded-xl text-xs font-bold bg-teal-100 text-teal-800 hover:bg-teal-200 transition">Change password</button>
           <button type="button" id="cancelDoctorModalBtn" class="px-4 py-2 rounded-xl text-xs font-semibold bg-slate-100 text-slate-700 hover:bg-slate-200 transition">Cancel</button>
           <button type="submit" class="px-5 py-2 rounded-xl text-xs font-bold bg-teal-600 hover:bg-teal-500 text-white shadow-sm transition">Save Surgeon Profile</button>
         </div>
@@ -883,14 +900,17 @@
 
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-    import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, deleteUser, signOut, updatePassword, sendPasswordResetEmail } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-    import { getFirestore, doc, getDoc, setDoc, runTransaction, deleteDoc, onSnapshot, collection, query, where } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
-    import { deleteApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+    import { getAuth, signInWithCustomToken, signInWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+    import { getFirestore, doc, getDoc, getDocs, onSnapshot, collection, query, where, writeBatch } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+    import { getFunctions, httpsCallable } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-functions.js";
 
     // =========================================================================
     // CONSTANTS & OPERATING ROOM CONFIGURATION (Q3 & Q4)
     // =========================================================================
-    const DEFAULT_TODAY = '2026-10-15'; // Thursday, Oct 15, 2026
+    const DEFAULT_TODAY = (() => {
+      const today = new Date();
+      return `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+    })();
     const SURGICAL_BEDS = [
       { id: 'A Zeiss', name: 'Bed A Zeiss', microscope: 'Zeiss Lumera Microscope Suite', color: 'teal' },
       { id: 'B Leica', name: 'Bed B Leica', microscope: 'Leica Proveo Ophthalmic Suite', color: 'indigo' }
@@ -908,77 +928,6 @@
       'Eyelid surgery': { label: 'Eyelid Surgery', defaultMinutes: 60, defaultFee: 450 },
       'Other surgery': { label: 'Other Ophthalmic Surgery', defaultMinutes: 60, defaultFee: 400 }
     };
-
-    // =========================================================================
-    // SEED APPROVED DOCTORS & ADMIN ACCOUNT (Q1, Q2, Q8, Q9)
-    // =========================================================================
-    const INITIAL_USERS = [
-      {
-        id: 'ADMIN-01',
-        role: 'ADMIN',
-        doctorCode: 'ADMIN-PPEC',
-        name: 'PPEC OR Admin (Surgical Coordinator)',
-        phone: '012000000',
-        email: 'admin@ppec.pethyoeung.com',
-        mustChangePassword: false,
-        status: 'Approved',
-        avatar: 'https://placehold.co/120x120/0f766e/ffffff?text=ADMIN'
-      },
-      {
-        id: 'DOC-01',
-        role: 'DOCTOR',
-        doctorCode: 'DR-PPEC-001',
-        name: 'Dr. Vannak Heng',
-        phone: '012888001',
-        email: 'vannak.heng@ppec.com',
-        mustChangePassword: true,
-        licenseNumber: 'MCC-OPH-2016-0142',
-        licenseAuthority: 'Medical Council of Cambodia (MCC)',
-        clinic: 'PPEC Eye Center & Preah Ang Duong Hospital',
-        capabilities: 'Cataract, Pterygium, Eyelid surgery, Other surgery',
-        createdAt: '2025-01-10',
-        status: 'Approved',
-        sharePct: 70,
-        paymentMethod: 'ABA Bank • 001 445 889 (HENG VANNAK - USD)',
-        avatar: 'https://placehold.co/120x120/0d9488/ffffff?text=VH'
-      },
-      {
-        id: 'DOC-02',
-        role: 'DOCTOR',
-        doctorCode: 'DR-PPEC-002',
-        name: 'Dr. Channary Ly',
-        phone: '012888002',
-        email: 'channary.ly@ppec.com',
-        mustChangePassword: true,
-        licenseNumber: 'MCC-OPH-2018-0319',
-        licenseAuthority: 'Medical Council of Cambodia (MCC)',
-        clinic: 'PPEC Eye Specialist Clinic Phnom Penh',
-        capabilities: 'Cataract, Eyelid surgery, Pterygium',
-        createdAt: '2025-03-22',
-        status: 'Approved',
-        sharePct: 65,
-        paymentMethod: 'ABA Bank • 002 771 334 (LY CHANNARY - USD)',
-        avatar: 'https://placehold.co/120x120/4f46e5/ffffff?text=CL'
-      },
-      {
-        id: 'DOC-03',
-        role: 'DOCTOR',
-        doctorCode: 'DR-PPEC-003',
-        name: 'Dr. Borey Prak',
-        phone: '012888003',
-        email: 'borey.prak@ppec.com',
-        mustChangePassword: true,
-        licenseNumber: 'MCC-OPH-2020-0511',
-        licenseAuthority: 'Medical Council of Cambodia (MCC)',
-        clinic: 'PPEC Ophthalmic Micro-Surgery Suite',
-        capabilities: 'Pterygium, Cataract, Other surgery',
-        createdAt: '2025-06-15',
-        status: 'Approved',
-        sharePct: 60,
-        paymentMethod: 'KHQR / ACLEDA • 092 881 102 (PRAK BOREY)',
-        avatar: 'https://placehold.co/120x120/0284c7/ffffff?text=BP'
-      }
-    ];
 
     // =========================================================================
     // SEED SURGICAL BOOKINGS
@@ -1183,17 +1132,22 @@
     // =========================================================================
     let users = [];
     let bookings = [];
+    let privateBookings = [];
+    let publicOccupancies = [];
     let auditLogs = [];
     let loggedInUser = null;
     let activeMainTab = 'calendar';
     let activeCalendarMode = 'daily';
-    let currentMonthYear = { year: 2026, month: 9 }; // October 2026 (0-indexed month = 9)
+    const now = new Date();
+    let currentMonthYear = { year: now.getFullYear(), month: now.getMonth() };
 
     let db = null;
     let auth = null;
+    let functions = null;
     let firebaseUser = null;
     let isCloudConnected = false;
     let cloudUnsubscribers = [];
+    let occupancyBackfillInProgress = false;
     const firebaseConfig = {
       apiKey: "AIzaSyBkpAofgqWvkBHjf8ji47MoSf3Z8x-ccOs",
       authDomain: "ppec-booking.firebaseapp.com",
@@ -1219,6 +1173,8 @@
     function sanitizeUserProfile(profile) {
       const safeProfile = { ...profile };
       delete safeProfile.password;
+      delete safeProfile.passwordHash;
+      delete safeProfile.passwordSalt;
       return safeProfile;
     }
 
@@ -1293,6 +1249,7 @@
         const app = initializeApp(firebaseConfig);
         auth = getAuth(app);
         db = getFirestore(app);
+        functions = getFunctions(app, 'us-central1');
         setText('cloudSyncText', 'FIREBASE READY • SIGN IN');
       } catch (e) {
         reportCloudError('Firebase initialization error:', e);
@@ -1306,7 +1263,7 @@
       let initialSnapshots = 0;
       setText('cloudSyncText', 'FIREBASE AUTHENTICATED • SYNCING');
 
-      const expectedSnapshots = loggedInUser.role === 'ADMIN' ? 3 : 2;
+      const expectedSnapshots = loggedInUser.role === 'ADMIN' ? 3 : 3;
       const onInitialSnapshot = () => {
         initialSnapshots += 1;
         if (initialSnapshots === expectedSnapshots) setText('cloudSyncText', 'FIREBASE SYNCED');
@@ -1325,12 +1282,36 @@
               const data = d.data();
               if (data && data.id) loaded.push(data);
             });
-            bookings = loaded;
+            privateBookings = loaded;
+            bookings = loggedInUser.role === 'ADMIN'
+              ? privateBookings
+              : mergeOccupancyAndPrivateBookings(publicOccupancies, privateBookings);
+            if (loggedInUser.role === 'ADMIN') backfillOccupancyFeed();
             renderAll();
             onInitialSnapshot();
           },
           (err) => reportCloudError('Bookings sync error:', err)
         ));
+
+        if (loggedInUser.role === 'DOCTOR') {
+          const occupancyCol = collection(db, 'ppec_eye_occupancy');
+          cloudUnsubscribers.push(onSnapshot(
+            occupancyCol,
+            snap => {
+              publicOccupancies = [];
+              snap.forEach(d => {
+                const data = d.data();
+                if (data && data.id) publicOccupancies.push(data);
+              });
+              bookings = mergeOccupancyAndPrivateBookings(publicOccupancies, privateBookings);
+              renderAll();
+              onInitialSnapshot();
+            },
+            err => reportCloudError('Operating room occupancy sync error:', err)
+          ));
+        } else {
+          publicOccupancies = [];
+        }
 
         const usersCol = collection(db, FIRESTORE_COLLECTIONS.users);
         const usersQuery = loggedInUser.role === 'ADMIN'
@@ -1354,6 +1335,7 @@
               const updatedSelf = users.find(u => u.id === loggedInUser.id);
               if (updatedSelf) loggedInUser = updatedSelf;
             }
+            if (loggedInUser?.role === 'ADMIN') backfillOccupancyFeed();
             renderAll();
             onInitialSnapshot();
           },
@@ -1388,25 +1370,99 @@
       }
     }
 
+    function mergeOccupancyAndPrivateBookings(occupancies, ownBookings) {
+      const bookingsById = new Map(occupancies.map(occupancy => [
+        occupancy.id,
+        {
+          id: occupancy.id,
+          date: occupancy.date,
+          bed: occupancy.bed,
+          startHour: occupancy.startHour,
+          durationMinutes: occupancy.durationMinutes,
+          duration: occupancy.duration,
+          status: 'Confirmed'
+        }
+      ]));
+      ownBookings.forEach(booking => bookingsById.set(booking.id, booking));
+      return [...bookingsById.values()];
+    }
+
+    async function backfillOccupancyFeed() {
+      if (occupancyBackfillInProgress || !isCloudConnected || loggedInUser?.role !== 'ADMIN') return;
+      const missing = privateBookings.filter(booking =>
+        booking && booking.id && booking.date && booking.bed
+        && !publicOccupancies.some(occupancy => occupancy.id === booking.id)
+      );
+      if (!missing.length) return;
+
+      occupancyBackfillInProgress = true;
+      try {
+        const existingSnapshot = await getDocs(collection(db, 'ppec_eye_occupancy'));
+        const existingIds = new Set(existingSnapshot.docs.map(occupancyDoc => occupancyDoc.id));
+        const missingWithDoctor = missing.filter(booking =>
+          !existingIds.has(booking.id)
+          && users.some(user => user.role === 'DOCTOR' && user.id === booking.doctorId)
+        );
+        for (let offset = 0; offset < missingWithDoctor.length; offset += 450) {
+          const batch = writeBatch(db);
+          missingWithDoctor.slice(offset, offset + 450).forEach(booking => {
+            batch.set(doc(db, 'ppec_eye_occupancy', booking.id), {
+              id: booking.id,
+              date: booking.date,
+              bed: booking.bed,
+              startHour: Number(booking.startHour),
+              durationMinutes: Number(booking.durationMinutes),
+              duration: Number(booking.duration)
+            });
+          });
+          await batch.commit();
+        }
+      } catch (error) {
+        reportCloudError('Operating room occupancy backfill failed:', error);
+        showToast('Could not update existing busy-bed times. Check Firestore rules and Admin access.');
+      } finally {
+        occupancyBackfillInProgress = false;
+      }
+    }
+
     function reportCloudError(message, error) {
       console.error(message, error);
       const code = error && typeof error === 'object' && 'code' in error ? error.code : '';
       const status = code === 'permission-denied' || code === 'unauthenticated'
-        ? 'FIRESTORE ACCESS DENIED'
+        ? 'FIREBASE ACCESS DENIED'
         : 'FIREBASE CONNECTION ERROR';
       setText('cloudSyncText', status);
     }
 
     function getFirebaseLoginError(error) {
       const code = error && typeof error === 'object' ? error.code : '';
+      if (code === 'functions/unauthenticated') {
+        return 'Phone/email or password is incorrect, or this account is not approved. New accounts start with password 1.';
+      }
+      if (code === 'functions/resource-exhausted') {
+        return 'Too many sign-in attempts. Wait 15 minutes, then try again.';
+      }
+      if (code === 'functions/invalid-argument') {
+        return 'Enter a valid registered phone number or email address.';
+      }
+      if (code === 'functions/not-found') {
+        return 'The phone/email sign-in function is not deployed. Ask the Firebase project owner to deploy Cloud Functions.';
+      }
+      if (code === 'functions/internal' || code === 'functions/unavailable' || code === 'functions/unknown') {
+        return 'Phone/email sign-in service is unavailable. Check that Cloud Functions are deployed and review Firebase logs.';
+      }
       if (code === 'auth/configuration-not-found') {
-        return 'Firebase Authentication is not configured for ppec-booking. In Firebase Console, open Authentication, select Get started, and enable Email/Password sign-in.';
+        return 'Firebase Authentication is not initialized. Finish Firebase Authentication setup.';
       }
       if (code === 'auth/invalid-credential' || code === 'auth/user-not-found' || code === 'auth/wrong-password') {
-        return 'Email or password is incorrect. Create this account under Firebase Console > Authentication.';
+        return 'Email or password is incorrect.';
       }
       if (code === 'auth/operation-not-allowed') {
-        return 'Email/password sign-in is disabled. Enable it in Firebase Console > Authentication > Sign-in method.';
+        return 'Firebase Authentication is not enabled for this project.';
+      }
+      if (code === 'auth/invalid-email') return 'Enter a valid email address or use your registered phone number.';
+      if (code === 'auth/invalid-api-key' || code === 'auth/project-not-found') {
+        return 'The Firebase project configuration is invalid. Check the app Firebase settings.';
       }
       if (code === 'auth/network-request-failed') {
         return 'Could not reach Firebase. Check your internet connection and run this page from node server.js.';
@@ -1414,7 +1470,7 @@
       if (code === 'permission-denied' || code === 'firestore/permission-denied') {
         return 'Authentication succeeded, but Firestore denied access. Check Firestore database and security rules.';
       }
-      return 'Could not connect/sign in. Check the Firebase project, Auth settings, Firestore database, and browser console.';
+      return 'Could not sign in. Check the phone/email, password, Firebase Authentication settings, and browser console.';
     }
 
     function ensureCloudSession() {
@@ -1423,126 +1479,137 @@
       }
     }
 
-    async function saveCloudDocument(collectionName, documentId, data, errorMessage) {
-      try {
-        ensureCloudSession();
-        await setDoc(doc(db, collectionName, documentId), data);
-        return true;
-      } catch (error) {
-        reportCloudError('Firebase save failed:', error);
-        showToast(errorMessage);
-        return false;
+    function getFirebaseAccountActionError(error, action) {
+      const code = error && typeof error === 'object' ? error.code : '';
+      if (['functions/not-found', 'functions/unavailable', 'functions/internal', 'functions/unknown']
+        .includes(code)) {
+        return `${action} could not reach a working Firebase Function. This project currently has no deployed Functions; deploy them first, then check Functions logs if the error continues.`;
       }
-    }
-
-    async function persistBooking(bookingObj) {
-      if (!await saveCloudDocument(FIRESTORE_COLLECTIONS.bookings, bookingObj.id, bookingObj, 'Firebase could not save this booking. Check Firestore rules.')) return false;
-      const idx = bookings.findIndex(b => b.id === bookingObj.id);
-      if (idx >= 0) bookings[idx] = bookingObj;
-      else bookings.push(bookingObj);
-      renderAll();
-      return true;
-    }
-
-    async function removeBookingRecord(bookingId) {
-      try {
-        ensureCloudSession();
-        await deleteDoc(doc(db, FIRESTORE_COLLECTIONS.bookings, bookingId));
-      } catch (error) {
-        reportCloudError('Firebase booking delete failed:', error);
-        showToast('Firebase could not delete this booking. Check Firestore rules.');
-        return false;
+      if (code === 'functions/permission-denied' || code === 'functions/unauthenticated') {
+        return 'Only a signed-in, approved Admin can perform this action.';
       }
-      bookings = bookings.filter(b => b.id !== bookingId);
-      renderAll();
-      return true;
+      if (error && error.message) return error.message;
+      return `${action} failed. Check Firebase Functions deployment and logs.`;
     }
 
-    async function persistUserRecord(userObj) {
-      const safeUser = sanitizeUserProfile(userObj);
-      const documentId = safeUser.authUid || (firebaseUser && safeUser.id === loggedInUser.id ? firebaseUser.uid : safeUser.id);
-      if (!await saveCloudDocument(FIRESTORE_COLLECTIONS.users, documentId, safeUser, 'Firebase could not save this profile. Check Firestore rules.')) return false;
-      const idx = users.findIndex(u => u.id === safeUser.id);
-      if (idx >= 0) users[idx] = safeUser;
-      else users.push(safeUser);
-      renderAll();
-      return true;
-    }
-
-    async function createUserRecord(userObj) {
-      ensureCloudSession();
-      const userRef = doc(db, FIRESTORE_COLLECTIONS.users, userObj.authUid);
-      await runTransaction(db, async transaction => {
-        const existing = await transaction.get(userRef);
-        if (existing.exists()) {
-          throw new Error('A profile already exists for this Firebase Authentication UID.');
-        }
-        transaction.set(userRef, sanitizeUserProfile(userObj));
-      });
-      users.push(sanitizeUserProfile(userObj));
-      renderAll();
-      return true;
-    }
-
-    async function appendAuditLog(action, details) {
-      if (!isCloudConnected || !db || !firebaseUser || !loggedInUser) {
-        showToast('Not connected to Firebase. The audit log was not saved.');
-        return false;
-      }
+    function createAuditEntry(action, details) {
       const now = new Date();
-      const timeStr = `${now.toISOString().slice(0, 10)} ${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
-      const entry = {
-        id: `LOG-${Date.now()}`,
-        timestamp: timeStr,
+      return {
+        id: `LOG-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+        timestamp: `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')} ${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`,
         actorUid: firebaseUser.uid,
         actorName: loggedInUser.name,
         actorRole: loggedInUser.role,
         action,
         details
       };
-      if (!await saveCloudDocument(FIRESTORE_COLLECTIONS.logs, entry.id, entry, 'Firebase could not save the audit log. Check Firestore rules.')) return false;
-      auditLogs.unshift(entry);
-      renderAuditLogs();
+    }
+
+    async function persistBooking(bookingObj) {
+      try {
+        ensureCloudSession();
+        const occupancyRef = doc(db, 'ppec_eye_occupancy', bookingObj.id);
+        const bookingRef = doc(db, FIRESTORE_COLLECTIONS.bookings, bookingObj.id);
+        const sameDateQuery = query(
+          collection(db, 'ppec_eye_occupancy'),
+          where('date', '==', bookingObj.date)
+        );
+        const occupancySnapshot = await getDocs(sameDateQuery);
+        const conflict = occupancySnapshot.docs.find(occupancyDoc => {
+          const occupied = occupancyDoc.data();
+          if (occupancyDoc.id === bookingObj.id || occupied.bed !== bookingObj.bed) return false;
+          const occupiedStart = Number(occupied.startHour);
+          const occupiedEnd = occupiedStart + Number(occupied.duration);
+          return bookingObj.startHour < occupiedEnd
+            && bookingObj.startHour + bookingObj.duration > occupiedStart;
+        });
+        if (conflict) {
+          showToast('This bed and time are already occupied. Choose another available slot.');
+          renderAll();
+          return false;
+        }
+
+        const auditEntry = createAuditEntry(
+          bookings.some(booking => booking.id === bookingObj.id) ? 'MODIFIED' : 'CREATED',
+          `Saved booking ${bookingObj.id} on ${bookingObj.date} at ${bookingObj.bed}`
+        );
+        const assignedDoctor = users.find(user => user.id === bookingObj.doctorId);
+        const ownerUid = assignedDoctor?.authUid
+          || (bookingObj.doctorId === loggedInUser.id ? firebaseUser.uid : '');
+        if (!ownerUid) throw new Error('The selected doctor profile is missing its Firebase account link.');
+
+        const batch = writeBatch(db);
+        batch.set(bookingRef, bookingObj);
+        batch.set(occupancyRef, {
+          id: bookingObj.id,
+          date: bookingObj.date,
+          bed: bookingObj.bed,
+          startHour: bookingObj.startHour,
+          durationMinutes: bookingObj.durationMinutes,
+          duration: bookingObj.duration
+        });
+        batch.set(doc(db, FIRESTORE_COLLECTIONS.logs, auditEntry.id), auditEntry);
+        await batch.commit();
+        if (loggedInUser.role === 'ADMIN') auditLogs.unshift(auditEntry);
+      } catch (error) {
+        reportCloudError('Firebase booking save failed:', error);
+        showToast(error.message || 'Firebase could not save this booking. Check Firestore rules.');
+        renderAll();
+        return false;
+      }
+
+      const idx = bookings.findIndex(b => b.id === bookingObj.id);
+      if (idx >= 0) bookings[idx] = bookingObj;
+      else bookings.push(bookingObj);
+      const privateIdx = privateBookings.findIndex(b => b.id === bookingObj.id);
+      if (privateIdx >= 0) privateBookings[privateIdx] = bookingObj;
+      else if (loggedInUser.role === 'ADMIN' || bookingObj.doctorId === loggedInUser.id) privateBookings.push(bookingObj);
+      publicOccupancies = publicOccupancies.filter(occupancy => occupancy.id !== bookingObj.id);
+      if (loggedInUser.role === 'DOCTOR') {
+        publicOccupancies.push({
+          id: bookingObj.id,
+          date: bookingObj.date,
+          bed: bookingObj.bed,
+          startHour: bookingObj.startHour,
+          durationMinutes: bookingObj.durationMinutes,
+          duration: bookingObj.duration
+        });
+      }
+      if (loggedInUser.role === 'DOCTOR') {
+        bookings = mergeOccupancyAndPrivateBookings(publicOccupancies, privateBookings);
+      }
+      renderAll();
+      return true;
+    }
+
+    async function removeBookingRecord(booking) {
+      try {
+        ensureCloudSession();
+        const auditEntry = createAuditEntry(
+          'DELETED',
+          `Cancelled booking ${booking.id} on ${booking.date} at ${booking.bed}`
+        );
+        const batch = writeBatch(db);
+        batch.delete(doc(db, FIRESTORE_COLLECTIONS.bookings, booking.id));
+        batch.delete(doc(db, 'ppec_eye_occupancy', booking.id));
+        batch.set(doc(db, FIRESTORE_COLLECTIONS.logs, auditEntry.id), auditEntry);
+        await batch.commit();
+        if (loggedInUser.role === 'ADMIN') auditLogs.unshift(auditEntry);
+      } catch (error) {
+        reportCloudError('Firebase booking delete failed:', error);
+        showToast(error.message || 'Firebase could not delete this booking. Check Firestore rules.');
+        return false;
+      }
+      bookings = bookings.filter(b => b.id !== booking.id);
+      privateBookings = privateBookings.filter(b => b.id !== booking.id);
+      publicOccupancies = publicOccupancies.filter(occupancy => occupancy.id !== booking.id);
+      renderAll();
       return true;
     }
 
     // =========================================================================
     // LOGIN & ACCOUNT MANAGEMENT (Q1, Q2, Q12)
     // =========================================================================
-    function renderQuickLoginAccounts() {
-      const container = document.getElementById('quickLoginAccountsList');
-      if (!container) return;
-
-      container.innerHTML = INITIAL_USERS.map(user => {
-        const isDoctor = user.role === 'DOCTOR';
-        return `
-          <button
-            type="button"
-            data-demo-phone="${user.phone}"
-            data-demo-email="${user.email}"
-            class="w-full text-left px-3 py-2 rounded-xl border border-slate-200 hover:border-teal-500 bg-slate-50 hover:bg-teal-50/50 transition flex items-center justify-between gap-2 text-xs"
-          >
-            <div class="min-w-0">
-              <div class="font-bold text-slate-900 truncate">${user.name}</div>
-              <div class="text-[11px] text-slate-500 font-mono">Tel: ${user.phone}</div>
-            </div>
-            <span class="shrink-0 px-2 py-0.5 rounded-md text-[10px] font-extrabold ${
-              isDoctor ? 'bg-teal-100 text-teal-800' : 'bg-slate-900 text-amber-300'
-            }">
-              ${isDoctor ? `DOCTOR (${user.sharePct}%)` : 'ADMIN'}
-            </span>
-          </button>
-        `;
-      }).join('');
-
-      container.querySelectorAll('[data-demo-phone]').forEach(button => {
-        button.addEventListener('click', () => {
-          document.getElementById('loginPhoneInput').value = button.getAttribute('data-demo-phone');
-          document.getElementById('loginErrorBanner').classList.add('hidden');
-        });
-      });
-    }
-
     async function handleLoginSubmit(e) {
       e.preventDefault();
       const loginIdentifier = document.getElementById('loginPhoneInput').value.trim();
@@ -1557,33 +1624,60 @@
       }
 
       try {
-        const loginEmail = loginIdentifier.includes('@')
-          ? loginIdentifier.toLowerCase()
-          : INITIAL_USERS.find(user => user.phone.replace(/\s+/g, '') === loginIdentifier.replace(/\s+/g, ''))?.email;
-        if (!loginEmail) {
-          setText('loginErrorBanner', 'This phone number has no Firebase email mapping. Enter your Firebase account email in the phone field, or add the matching profile to the platform.');
-          errBanner.classList.remove('hidden');
-          return;
+        let credential;
+        let mustChangePassword = false;
+        if (loginIdentifier.includes('@')) {
+          try {
+            credential = await signInWithEmailAndPassword(auth, loginIdentifier, pass);
+            try {
+              await httpsCallable(functions, 'syncEmailPasswordForPhoneLogin')({ password: pass });
+            } catch (syncError) {
+              console.error('Email sign-in succeeded, but phone password synchronization failed:', syncError);
+            }
+          } catch (emailSignInError) {
+            const canUseCustomCredentials = [
+              'auth/invalid-credential',
+              'auth/user-not-found',
+              'auth/wrong-password'
+            ].includes(emailSignInError && emailSignInError.code);
+            if (!canUseCustomCredentials) throw emailSignInError;
+            const loginResult = await httpsCallable(functions, 'loginWithPhonePassword')({
+              identifier: loginIdentifier,
+              password: pass
+            });
+            if (!loginResult.data || typeof loginResult.data.customToken !== 'string') {
+              throw new Error('Firebase sign-in returned no authentication token. Check Cloud Functions deployment.');
+            }
+            mustChangePassword = loginResult.data.mustChangePassword === true;
+            credential = await signInWithCustomToken(auth, loginResult.data.customToken);
+          }
+        } else {
+          const loginResult = await httpsCallable(functions, 'loginWithPhonePassword')({
+            identifier: loginIdentifier,
+            password: pass
+          });
+          if (!loginResult.data || typeof loginResult.data.customToken !== 'string') {
+            throw new Error('Firebase sign-in returned no authentication token. Check Cloud Functions deployment.');
+          }
+          mustChangePassword = loginResult.data.mustChangePassword === true;
+          credential = await signInWithCustomToken(auth, loginResult.data.customToken);
         }
-
-        const credential = await signInWithEmailAndPassword(auth, loginEmail, pass);
         firebaseUser = credential.user;
         const profileSnapshot = await getDoc(doc(db, FIRESTORE_COLLECTIONS.users, credential.user.uid));
         if (!profileSnapshot.exists()) {
           await signOut(auth);
           firebaseUser = null;
-          setText('loginErrorBanner', `Authentication succeeded, but no profile exists for ${credential.user.email} at ppec_user / ${credential.user.uid}. Create the profile document using the Authentication UID as its Document ID.`);
+          setText('loginErrorBanner', 'Your account profile was not found. Ask the administrator to check the Firebase user setup.');
           errBanner.classList.remove('hidden');
           return;
         }
 
         const matched = sanitizeUserProfile({ ...profileSnapshot.data(), authUid: profileSnapshot.id });
         if (!matched.id ||
-          matched.email?.toLowerCase() !== credential.user.email?.toLowerCase() ||
           !['ADMIN', 'DOCTOR'].includes(matched.role) || matched.status !== 'Approved') {
           await signOut(auth);
           firebaseUser = null;
-          setText('loginErrorBanner', 'Your ppec_user profile must have the same email, a valid id, role ADMIN or DOCTOR, and status Approved.');
+          setText('loginErrorBanner', 'Your account is not approved. Ask the administrator to check your Firebase profile.');
           errBanner.classList.remove('hidden');
           return;
         }
@@ -1591,8 +1685,9 @@
         loggedInUser = matched;
         users = [matched];
         bookings = [];
+        privateBookings = [];
+        publicOccupancies = [];
         auditLogs = [];
-        startCloudSync();
         document.getElementById('loginGateOverlay').classList.add('hidden');
         setText('headerUserRoleBadge', matched.role);
         setText('headerUserName', matched.name);
@@ -1608,9 +1703,13 @@
             ? 'Administrator View: Full access to all surgeons, patient data, schedules, and financial settlements'
             : 'Surgeon View (Q7 Privacy): Other surgeons\' bookings appear strictly as "Bed Occupied" (confidential)'
         );
-        if (matched.mustChangePassword) {
+        if (mustChangePassword || matched.mustChangePassword) {
           document.getElementById('newPasswordInput').value = '';
+          document.getElementById('cancelChangePasswordBtn').classList.add('hidden');
           document.getElementById('changePasswordModal').classList.remove('hidden');
+          setText('cloudSyncText', 'PASSWORD CHANGE REQUIRED');
+        } else {
+          startCloudSync();
         }
         renderAll();
         showToast(`Welcome, ${matched.name}`);
@@ -1624,7 +1723,9 @@
           }
         }
         firebaseUser = null;
-        setText('loginErrorBanner', getFirebaseLoginError(error));
+        setText('loginErrorBanner', error && error.message && !error.code
+          ? error.message
+          : getFirebaseLoginError(error));
         errBanner.classList.remove('hidden');
         setText('cloudSyncText', error && error.code === 'auth/configuration-not-found'
           ? 'FIREBASE AUTH NOT CONFIGURED'
@@ -1765,7 +1866,10 @@
 
       setText('kpiTodayCases', `${dayBookings.length} Cases`);
       setText('kpiTodayBreakdown', `Morning: ${morningCount} • Afternoon: ${afternoonCount}`);
-      setText('kpiAvailableBeds', isSun ? '0 Beds (Sunday Closed)' : '2 Beds');
+      const availableBeds = new Set(
+        findAvailableSlotsForDate(selectedDate).map(slot => slot.bed)
+      ).size;
+      setText('kpiAvailableBeds', isSun ? '0 Beds (Sunday Closed)' : `${availableBeds} Beds Free`);
       setText('kpiBookedHours', `${bookedHours.toFixed(1)} Hours`);
       setText('kpiRemainingHours', `${Math.max(0, 12 - bookedHours).toFixed(1)}h available / 12h total`);
       setText('kpiUtilizationPct', `${utilizationPct}%`);
@@ -2345,10 +2449,6 @@
             paidDate: nowPaid ? (target.paidDate || getSelectedDate()) : ''
           };
           if (!await persistBooking(updated)) return;
-          if (!await appendAuditLog(
-            'PAID_SETTLEMENT',
-            `${nowPaid ? 'Marked payout settled' : 'Unchecked payout status'} for case ${updated.id} (${updated.doctorName}) on ${updated.paidDate || '-'}`
-          )) return;
           showToast(nowPaid ? `Marked settled on date ${updated.paidDate}` : 'Marked unpaid');
         });
       });
@@ -2655,6 +2755,19 @@
     }
 
     function openDoctorProfileModal(docObj = null) {
+      const resetResult = document.getElementById('doctorPasswordResetResult');
+      resetResult.textContent = '';
+      resetResult.classList.add('hidden');
+      document.getElementById('deleteDoctorAccountBtn').classList.toggle('hidden', !docObj);
+      document.getElementById('resetDoctorPasswordBtn').classList.toggle(
+        'hidden',
+        !docObj || loggedInUser?.role !== 'ADMIN'
+      );
+      document.getElementById('changeDoctorPasswordBtn').classList.toggle(
+        'hidden',
+        !docObj || !firebaseUser || docObj.authUid !== firebaseUser.uid
+      );
+      document.getElementById('docEmailInput').readOnly = Boolean(docObj);
       if (docObj) {
         document.getElementById('editDoctorInternalId').value = docObj.id;
         document.getElementById('docNameInput').value = docObj.name;
@@ -2703,7 +2816,6 @@
     // EVENT LISTENERS INITIALIZATION
     // =========================================================================
     document.addEventListener('DOMContentLoaded', () => {
-      renderQuickLoginAccounts();
       initCloudSync();
 
       // Login Form
@@ -2719,6 +2831,8 @@
         users = [];
         bookings = [];
         auditLogs = [];
+        privateBookings = [];
+        publicOccupancies = [];
         if (auth) {
           try {
             await signOut(auth);
@@ -2731,25 +2845,54 @@
       });
 
       // First-Login Password Change Modal (Q2)
+      let returnToDoctorProfileAfterPasswordChange = false;
       document.getElementById('changePasswordForm').addEventListener('submit', async (e) => {
         e.preventDefault();
         const newPass = document.getElementById('newPasswordInput').value;
-        if (!newPass || !loggedInUser || !firebaseUser) return;
+        if (!newPass || !loggedInUser || !firebaseUser || !functions) {
+          showToast('Sign in and connect to Firebase Functions before changing your password.');
+          return;
+        }
         try {
-          await updatePassword(firebaseUser, newPass);
+          await httpsCallable(functions, 'changePhonePassword')({ newPassword: newPass });
           const updatedUser = { ...loggedInUser, mustChangePassword: false };
-          if (!await persistUserRecord(updatedUser)) return;
           loggedInUser = updatedUser;
+          users = users.map(user => user.id === updatedUser.id ? updatedUser : user);
           document.getElementById('changePasswordModal').classList.add('hidden');
+          document.getElementById('newPasswordInput').value = '';
+          if (returnToDoctorProfileAfterPasswordChange) {
+            document.getElementById('doctorProfileModal').classList.remove('hidden');
+            returnToDoctorProfileAfterPasswordChange = false;
+          }
+          startCloudSync();
           showToast('Password updated successfully!');
         } catch (error) {
           console.error('Firebase password update failed:', error);
-          showToast('Password update failed. Sign in again and retry.');
+          showToast(error.code === 'auth/requires-recent-login'
+            ? 'For security, sign out and sign in again before changing your password.'
+            : error.message || 'Password update failed. Check your connection and try again.');
         }
       });
-
-      document.getElementById('skipPasswordChangeBtn').addEventListener('click', () => {
+      document.getElementById('changeDoctorPasswordBtn').addEventListener('click', () => {
+        const doctorId = document.getElementById('editDoctorInternalId').value;
+        const doctor = users.find(user => user.id === doctorId);
+        if (!loggedInUser || !firebaseUser || !doctor || doctor.authUid !== firebaseUser.uid) {
+          showToast('You can only change the password for your own signed-in account.');
+          return;
+        }
+        document.getElementById('newPasswordInput').value = '';
+        document.getElementById('cancelChangePasswordBtn').classList.remove('hidden');
+        returnToDoctorProfileAfterPasswordChange = true;
+        document.getElementById('doctorProfileModal').classList.add('hidden');
+        document.getElementById('changePasswordModal').classList.remove('hidden');
+      });
+      document.getElementById('cancelChangePasswordBtn').addEventListener('click', () => {
         document.getElementById('changePasswordModal').classList.add('hidden');
+        document.getElementById('newPasswordInput').value = '';
+        if (returnToDoctorProfileAfterPasswordChange) {
+          document.getElementById('doctorProfileModal').classList.remove('hidden');
+          returnToDoctorProfileAfterPasswordChange = false;
+        }
       });
 
       // Main Navigation Tabs
@@ -2795,6 +2938,7 @@
 
       // Date Navigator
       const dateInput = document.getElementById('scheduleDateInput');
+      dateInput.value = DEFAULT_TODAY;
       dateInput.addEventListener('change', renderAll);
 
       document.getElementById('prevDayBtn').addEventListener('click', () => {
@@ -2918,10 +3062,6 @@
         document.getElementById('bookingModal').classList.add('hidden');
 
         if (!await persistBooking(payload)) return;
-        if (!await appendAuditLog(
-          editingId ? 'MODIFIED' : 'CREATED',
-          `${editingId ? 'Updated booking' : 'Booked new case'} ${payload.id} on ${payload.bed} on ${payload.date} at ${formatHour24(payload.startHour)} (${payload.surgeryType} - ${payload.patientName})`
-        )) return;
         showToast(`Saved booking on ${payload.bed} for ${payload.date} at ${formatHour24(payload.startHour)}`);
       });
 
@@ -2939,11 +3079,7 @@
         }
 
         document.getElementById('bookingModal').classList.add('hidden');
-        if (!await removeBookingRecord(editingId)) return;
-        if (!await appendAuditLog(
-          'DELETED',
-          `Cancelled booking ${target.id} on ${target.bed} for ${target.date} at ${formatHour24(target.startHour)} (${target.patientName})`
-        )) return;
+        if (!await removeBookingRecord(target)) return;
         showToast(`Successfully cancelled booking ${target.id}`);
       });
 
@@ -2951,6 +3087,89 @@
       document.getElementById('addDoctorModalBtn').addEventListener('click', () => openDoctorProfileModal(null));
       document.getElementById('closeDoctorModalBtn').addEventListener('click', () => document.getElementById('doctorProfileModal').classList.add('hidden'));
       document.getElementById('cancelDoctorModalBtn').addEventListener('click', () => document.getElementById('doctorProfileModal').classList.add('hidden'));
+      let resetPasswordDoctorId = '';
+      document.getElementById('resetDoctorPasswordBtn').addEventListener('click', () => {
+        const doctorId = document.getElementById('editDoctorInternalId').value;
+        const doctor = users.find(user => user.id === doctorId);
+        if (!doctor || loggedInUser?.role !== 'ADMIN' || !functions) {
+          showToast('Sign in as Admin and connect to Firebase Functions before resetting a password.');
+          return;
+        }
+        resetPasswordDoctorId = doctor.id;
+        document.getElementById('adminResetPasswordDoctorName').textContent = `Set a new password for ${doctor.name}`;
+        document.getElementById('adminResetPasswordInput').value = '';
+        document.getElementById('doctorProfileModal').classList.add('hidden');
+        document.getElementById('adminResetPasswordModal').classList.remove('hidden');
+        document.getElementById('adminResetPasswordInput').focus();
+      });
+      document.getElementById('adminResetPasswordForm').addEventListener('submit', async event => {
+        event.preventDefault();
+        const doctor = users.find(user => user.id === resetPasswordDoctorId);
+        const password = document.getElementById('adminResetPasswordInput').value;
+        const submitButton = document.getElementById('submitAdminResetPasswordBtn');
+        if (!doctor || loggedInUser?.role !== 'ADMIN' || !functions) {
+          showToast('Sign in as Admin and connect to Firebase Functions before resetting a password.');
+          return;
+        }
+        if (password.length < 8 || password.length > 128) {
+          showToast('Choose a password with 8 to 128 characters.');
+          return;
+        }
+        submitButton.disabled = true;
+        try {
+          await httpsCallable(functions, 'resetUserPassword')({ userId: doctor.id, password });
+          const loginIds = [doctor.phone, doctor.email].filter(Boolean).join(' / ');
+          const notice = document.getElementById('doctorPasswordResetResult');
+          notice.textContent = `Password updated for ${loginIds}. Share the new password securely.`;
+          notice.classList.remove('hidden');
+          document.getElementById('adminResetPasswordInput').value = '';
+          document.getElementById('adminResetPasswordModal').classList.add('hidden');
+          resetPasswordDoctorId = '';
+          document.getElementById('doctorProfileModal').classList.remove('hidden');
+          showToast(`Password updated for ${doctor.name}.`);
+        } catch (error) {
+          console.error('Doctor password reset failed:', error);
+          showToast(getFirebaseAccountActionError(error, 'Password reset'));
+        } finally {
+          submitButton.disabled = false;
+        }
+      });
+      document.getElementById('cancelAdminResetPasswordBtn').addEventListener('click', () => {
+        document.getElementById('adminResetPasswordInput').value = '';
+        document.getElementById('adminResetPasswordModal').classList.add('hidden');
+        resetPasswordDoctorId = '';
+        document.getElementById('doctorProfileModal').classList.remove('hidden');
+      });
+      document.getElementById('deleteDoctorAccountBtn').addEventListener('click', async event => {
+        const button = event.currentTarget;
+        const doctorId = document.getElementById('editDoctorInternalId').value;
+        const doctor = users.find(user => user.id === doctorId);
+        if (!doctor || !doctor.authUid || loggedInUser?.role !== 'ADMIN' || !firebaseUser || !db) {
+          showToast('Sign in as Admin and connect to Firebase before deleting a doctor profile.');
+          return;
+        }
+        if (!window.confirm(`Delete ${doctor.name}'s app profile? This removes app access, but does not delete their Firebase Authentication account. Historical bookings and audit records will be retained.`)) {
+          return;
+        }
+        button.disabled = true;
+        try {
+          ensureCloudSession();
+          const batch = writeBatch(db);
+          const auditEntry = createAuditEntry('DOCTOR_PROFILE_DELETED', `Removed app profile for ${doctor.name} (${doctor.email || doctor.phone}). Firebase Authentication account was not deleted.`);
+          batch.delete(doc(db, 'ppec_user', doctor.authUid));
+          batch.set(doc(db, 'ppec_eye_logs', auditEntry.id), auditEntry);
+          await batch.commit();
+          users = users.filter(user => user.id !== doctorId);
+          renderAll();
+          document.getElementById('doctorProfileModal').classList.add('hidden');
+          showToast(`Deleted ${doctor.name}'s app profile. Their Firebase Authentication account remains; historical bookings and audit records were retained.`);
+        } catch (error) {
+          reportCloudError('Doctor profile deletion failed:', error);
+          showToast(error.message || 'Could not delete the doctor profile. Check Firestore rules and Admin access.');
+        } finally {
+          button.disabled = false;
+        }
+      });
 
       document.getElementById('doctorProfileForm').addEventListener('submit', async (e) => {
         e.preventDefault();
@@ -2978,80 +3197,50 @@
         };
 
         if (submitButton) submitButton.disabled = true;
-        let provisioningApp = null;
-        let newlyCreatedAuthUser = null;
         try {
+          ensureCloudSession();
+          if (loggedInUser.role !== 'ADMIN') {
+            throw new Error('Only an Admin can add or edit doctor profiles.');
+          }
+          const duplicate = users.find(user => user.id !== docObj.id && (
+            String(user.email || '').trim().toLowerCase() === docObj.email.toLowerCase()
+            || String(user.doctorCode || '').trim().toLowerCase() === docObj.doctorCode.toLowerCase()
+            || String(user.phone || '').replace(/\D/g, '') === docObj.phone.replace(/\D/g, '')
+          ));
+          if (duplicate) {
+            throw new Error('Another profile already uses this email, Doctor ID, or phone number.');
+          }
+
           if (existingId) {
-            if (!await persistUserRecord(docObj)) return;
-            if (!await appendAuditLog(
-              'DOCTOR_UPDATED',
-              `Admin updated profile for ${docObj.name} (${docObj.doctorCode})`
-            )) return;
+            if (!existingProfile) throw new Error('Doctor profile is no longer available. Refresh and try again.');
+            if (docObj.email.toLowerCase() !== String(existingProfile.email || '').toLowerCase()) {
+              throw new Error('Email address cannot be changed here because it must also be updated in Firebase Authentication.');
+            }
+            const result = await httpsCallable(functions, 'updateDoctorAccount')({ doctor: docObj });
+            const updatedProfile = sanitizeUserProfile(result.data.profile);
+            users = users.map(user => user.id === updatedProfile.id ? updatedProfile : user);
+            renderAll();
             document.getElementById('doctorProfileModal').classList.add('hidden');
             showToast(`Saved surgeon profile for ${docObj.name}`);
             return;
           }
 
-          ensureCloudSession();
-          if (docObj.email.toLowerCase() === firebaseUser.email?.toLowerCase()) {
-            throw new Error('Use an email address different from the Admin account.');
-          }
-          provisioningApp = initializeApp(firebaseConfig, `doctor-provisioning-${crypto.randomUUID()}`);
-          const provisioningAuth = getAuth(provisioningApp);
-          const authCredential = await createUserWithEmailAndPassword(
-            provisioningAuth,
-            docObj.email,
-            crypto.randomUUID()
-          );
-          newlyCreatedAuthUser = authCredential.user;
-          docObj.authUid = newlyCreatedAuthUser.uid;
-
-          if (!await createUserRecord(docObj)) return;
-          newlyCreatedAuthUser = null;
+          const result = await httpsCallable(functions, 'createDoctorAccount')({ doctor: docObj });
+          const createdProfile = sanitizeUserProfile(result.data.profile);
+          users.push(createdProfile);
+          renderAll();
           document.getElementById('doctorProfileModal').classList.add('hidden');
-          const auditSaved = await appendAuditLog(
-            'DOCTOR_APPROVED',
-            `Admin created profile for ${docObj.name} (${docObj.doctorCode})`
-          );
-
-          try {
-            await sendPasswordResetEmail(auth, docObj.email);
-            if (docObj.status === 'Approved') {
-              showToast(auditSaved
-                ? `Doctor account created. Password setup email sent to ${docObj.email}`
-                : `Doctor account and profile created, but the audit log could not be saved. Password setup email sent to ${docObj.email}`);
-            } else {
-              showToast(auditSaved
-                ? 'Doctor account created as Suspended. Setup email sent; sign-in is blocked until approved.'
-                : 'Doctor account created as Suspended, but the audit log could not be saved. Sign-in remains blocked until approved.');
-            }
-          } catch (emailError) {
-            console.error('Doctor profile saved, but password setup email failed:', emailError);
-            showToast(`Account created, but password setup email failed: ${emailError.message || 'Check Firebase Auth email settings.'}`);
-          }
+          showToast(docObj.status === 'Approved'
+            ? `Doctor account created. Share ${docObj.phone} / ${docObj.email} and temporary password 1 securely.`
+            : 'Doctor account created as Suspended. Sign-in remains blocked until approved.');
         } catch (error) {
           console.error('Doctor profile save failed:', error);
           reportCloudError('Doctor profile save failed:', error);
-          if (newlyCreatedAuthUser) {
-            try {
-              await deleteUser(newlyCreatedAuthUser);
-            } catch (rollbackError) {
-              console.error('Could not remove the new Auth account after profile creation failed:', rollbackError);
-              showToast('Profile creation failed, and the unused Authentication account could not be removed. Check Authentication > Users.');
-            }
-          }
           const message = error.code === 'auth/email-already-in-use'
-            ? 'An Authentication account already uses this email. Use a different email or update the existing doctor profile.'
-            : error.message || 'Could not create the doctor account. Check Firebase setup and try again.';
+            ? 'A Firebase Authentication account already uses this email.'
+            : getFirebaseAccountActionError(error, 'Doctor profile save');
           showToast(message);
         } finally {
-          if (provisioningApp) {
-            try {
-              await deleteApp(provisioningApp);
-            } catch (cleanupError) {
-              console.error('Could not clean up the temporary Firebase Auth app:', cleanupError);
-            }
-          }
           if (submitButton) submitButton.disabled = false;
         }
       });

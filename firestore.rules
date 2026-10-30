@@ -9,7 +9,6 @@ service cloud.firestore {
     function activeProfile() {
       return signedIn()
         && exists(/databases/$(database)/documents/ppec_user/$(request.auth.uid))
-        && get(/databases/$(database)/documents/ppec_user/$(request.auth.uid)).data.email == request.auth.token.email
         && get(/databases/$(database)/documents/ppec_user/$(request.auth.uid)).data.status == 'Approved'
         && get(/databases/$(database)/documents/ppec_user/$(request.auth.uid)).data.role in ['ADMIN', 'DOCTOR'];
     }
@@ -28,14 +27,13 @@ service cloud.firestore {
       allow get, list: if isAdmin()
         || (signedIn()
           && profileId == request.auth.uid
-          && resource.data.email == request.auth.token.email);
+          && resource.data.status == 'Approved');
 
       allow create, delete: if isAdmin();
 
       allow update: if isAdmin()
         || (isDoctor()
           && profileId == request.auth.uid
-          && resource.data.email == request.auth.token.email
           && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['mustChangePassword'])
           && request.resource.data.mustChangePassword == false);
     }
@@ -73,6 +71,46 @@ service cloud.firestore {
       allow delete: if isAdmin()
         || (isDoctor()
           && resource.data.doctorId == get(/databases/$(database)/documents/ppec_user/$(request.auth.uid)).data.id);
+    }
+
+    match /ppec_eye_occupancy/{occupancyId} {
+      allow get, list: if activeProfile();
+
+      function validOccupancyData() {
+        return request.resource.data.id == occupancyId
+          && request.resource.data.keys().hasOnly([
+            'id',
+            'date',
+            'bed',
+            'startHour',
+            'durationMinutes',
+            'duration'
+          ]);
+      }
+
+      function linkedBookingMatches() {
+        return existsAfter(/databases/$(database)/documents/ppec_eye_bookings/$(occupancyId))
+          && getAfter(/databases/$(database)/documents/ppec_eye_bookings/$(occupancyId)).data.id == occupancyId
+          && getAfter(/databases/$(database)/documents/ppec_eye_bookings/$(occupancyId)).data.date == request.resource.data.date
+          && getAfter(/databases/$(database)/documents/ppec_eye_bookings/$(occupancyId)).data.bed == request.resource.data.bed
+          && getAfter(/databases/$(database)/documents/ppec_eye_bookings/$(occupancyId)).data.startHour == request.resource.data.startHour
+          && getAfter(/databases/$(database)/documents/ppec_eye_bookings/$(occupancyId)).data.durationMinutes == request.resource.data.durationMinutes
+          && getAfter(/databases/$(database)/documents/ppec_eye_bookings/$(occupancyId)).data.duration == request.resource.data.duration;
+      }
+
+      allow create, update: if activeProfile()
+        && validOccupancyData()
+        && linkedBookingMatches()
+        && (isAdmin()
+          || (isDoctor()
+            && getAfter(/databases/$(database)/documents/ppec_eye_bookings/$(occupancyId)).data.doctorId
+              == get(/databases/$(database)/documents/ppec_user/$(request.auth.uid)).data.id));
+
+      allow delete: if isAdmin()
+        || (isDoctor()
+          && exists(/databases/$(database)/documents/ppec_eye_bookings/$(occupancyId))
+          && get(/databases/$(database)/documents/ppec_eye_bookings/$(occupancyId)).data.doctorId
+            == get(/databases/$(database)/documents/ppec_user/$(request.auth.uid)).data.id);
     }
 
     match /ppec_eye_logs/{logId} {
