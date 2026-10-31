@@ -55,7 +55,7 @@
 <body class="min-h-screen flex flex-col bg-slate-50 text-slate-900">
 
   <!-- ===================================================================== -->
-  <!-- LOGIN OVERLAY GATE (Firebase email and password)                      -->
+  <!-- LOGIN OVERLAY GATE (phone number and password)                        -->
   <!-- ===================================================================== -->
   <div id="loginGateOverlay" class="fixed inset-0 z-50 bg-slate-950/95 backdrop-blur-md flex items-center justify-center p-4 overflow-y-auto">
     <div class="max-w-md w-full bg-white rounded-3xl shadow-2xl border border-slate-200 overflow-hidden my-6">
@@ -79,12 +79,12 @@
       <!-- Login Form -->
       <form id="loginForm" class="p-6 space-y-4">
         <div id="loginErrorBanner" class="hidden p-3 rounded-xl bg-rose-50 border border-rose-200 text-xs font-semibold text-rose-700">
-          Invalid email or password, or account is pending Admin approval.
+          Invalid phone number or password, or account is pending Admin approval.
         </div>
 
         <div>
-          <label class="block text-xs font-bold text-slate-700 mb-1">Doctor / Admin Email *</label>
-          <input id="loginEmailInput" type="email" required autocomplete="username" placeholder="Enter your registered email" class="w-full px-3.5 py-2.5 text-sm bg-slate-50 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500 focus:bg-white" />
+          <label class="block text-xs font-bold text-slate-700 mb-1">Phone Number *</label>
+          <input id="loginPhoneInput" type="tel" inputmode="tel" required autocomplete="username" placeholder="Enter your registered phone number" class="w-full px-3.5 py-2.5 text-sm bg-slate-50 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500 focus:bg-white" />
         </div>
 
         <div>
@@ -96,11 +96,22 @@
           <span>Sign In to Platform</span>
           <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
         </button>
-
-        <button id="forgotPasswordBtn" type="button" class="w-full text-xs font-semibold text-teal-700 hover:text-teal-900">Forgot password? Send a reset link to your email</button>
-        <div id="passwordResetStatus" role="status" aria-live="polite" class="hidden p-3 rounded-xl bg-teal-50 border border-teal-200 text-xs font-semibold text-teal-800"></div>
-        <p class="text-[11px] text-slate-500">Sign in with your registered email and Firebase Authentication password.</p>
       </form>
+      <div class="px-6 pb-6 space-y-3">
+        <button id="forgotPasswordBtn" type="button" class="w-full text-xs font-semibold text-teal-700 hover:text-teal-900">Forgot password? Send SMS code</button>
+        <div id="passwordResetStatus" role="status" aria-live="polite" class="hidden p-3 rounded-xl bg-teal-50 border border-teal-200 text-xs font-semibold text-teal-800"></div>
+        <div id="passwordResetRecaptcha" class="flex justify-center"></div>
+        <div id="passwordResetCodeSection" class="hidden space-y-3">
+          <label class="block text-xs font-bold text-slate-700" for="passwordResetCodeInput">SMS verification code *</label>
+          <input id="passwordResetCodeInput" type="text" inputmode="numeric" autocomplete="one-time-code" maxlength="6" placeholder="Enter the 6-digit code" class="w-full px-3.5 py-2.5 text-sm bg-slate-50 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500" />
+          <label class="block text-xs font-bold text-slate-700" for="forgotNewPasswordInput">New password *</label>
+          <input id="forgotNewPasswordInput" type="password" minlength="8" maxlength="128" autocomplete="new-password" placeholder="8 to 128 characters" class="w-full px-3.5 py-2.5 text-sm bg-slate-50 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500" />
+          <label class="block text-xs font-bold text-slate-700" for="forgotConfirmPasswordInput">Confirm new password *</label>
+          <input id="forgotConfirmPasswordInput" type="password" minlength="8" maxlength="128" autocomplete="new-password" placeholder="Enter the new password again" class="w-full px-3.5 py-2.5 text-sm bg-slate-50 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500" />
+          <button id="confirmForgotPasswordBtn" type="button" class="w-full py-2.5 px-4 rounded-xl bg-teal-600 hover:bg-teal-500 text-white font-bold text-sm shadow-md transition">Verify code and reset password</button>
+        </div>
+        <p class="text-[11px] text-slate-500">Sign in with your registered phone number and password.</p>
+      </div>
     </div>
   </div>
 
@@ -117,11 +128,15 @@
       </div>
       <form id="changePasswordForm" class="p-6 space-y-4">
         <p class="text-xs text-slate-600 leading-relaxed">
-          Choose a new password of at least 8 characters for your email sign-in.
+          Choose a new password of at least 8 characters for your phone sign-in.
         </p>
         <div>
           <label class="block text-xs font-bold text-slate-700 mb-1">New Password *</label>
-          <input id="newPasswordInput" type="password" required minlength="8" autocomplete="new-password" placeholder="Use at least 8 characters" class="w-full px-3.5 py-2 text-sm border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500" />
+          <input id="newPasswordInput" type="password" required minlength="8" maxlength="128" autocomplete="new-password" placeholder="Use 8 to 128 characters" class="w-full px-3.5 py-2 text-sm border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500" />
+        </div>
+        <div>
+          <label class="block text-xs font-bold text-slate-700 mb-1">Confirm New Password *</label>
+          <input id="confirmNewPasswordInput" type="password" required minlength="8" maxlength="128" autocomplete="new-password" placeholder="Enter the new password again" class="w-full px-3.5 py-2 text-sm border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500" />
         </div>
         <div class="flex items-center justify-end gap-2 pt-2">
           <button id="cancelChangePasswordBtn" type="button" class="px-4 py-2 rounded-xl text-xs font-semibold bg-slate-100 text-slate-700 hover:bg-slate-200 transition">
@@ -135,19 +150,72 @@
     </div>
   </div>
 
+  <div id="accountProfileModal" class="fixed inset-0 z-50 hidden bg-slate-900/70 backdrop-blur-xs flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl max-w-md w-full border border-slate-200 shadow-2xl overflow-hidden">
+      <div class="px-6 py-4 bg-slate-900 text-white flex items-center justify-between">
+        <div>
+          <h3 class="text-base font-extrabold">My Account</h3>
+          <p class="text-xs text-slate-300">View your account and manage your password</p>
+        </div>
+        <button id="closeAccountProfileBtn" type="button" aria-label="Close account profile" class="p-1.5 rounded-lg text-slate-300 hover:text-white hover:bg-slate-700 transition">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+        </button>
+      </div>
+      <div class="p-6 space-y-4">
+        <div class="rounded-xl border border-slate-200 divide-y divide-slate-200">
+          <div class="flex items-center justify-between gap-4 px-4 py-3">
+            <span class="text-xs font-semibold text-slate-500">Name</span>
+            <span id="accountProfileName" class="text-sm font-bold text-slate-900 text-right"></span>
+          </div>
+          <div class="flex items-center justify-between gap-4 px-4 py-3">
+            <span class="text-xs font-semibold text-slate-500">Phone Number</span>
+            <span id="accountProfilePhone" class="text-sm font-mono font-semibold text-slate-900 text-right"></span>
+          </div>
+          <div class="flex items-center justify-between gap-4 px-4 py-3">
+            <span class="text-xs font-semibold text-slate-500">Role</span>
+            <span id="accountProfileRole" class="text-sm font-bold text-slate-900 text-right"></span>
+          </div>
+        </div>
+        <button id="openMyPasswordChangeBtn" type="button" class="w-full px-4 py-2.5 rounded-xl text-sm font-bold bg-teal-600 hover:bg-teal-500 text-white transition">
+          Change My Password
+        </button>
+        <div id="adminUserPasswordControls" class="hidden pt-4 border-t border-slate-200 space-y-3">
+          <h4 class="text-sm font-extrabold text-slate-900">Admin: Change Another User's Password</h4>
+          <div>
+            <label for="adminTargetUserSelect" class="block text-xs font-bold text-slate-700 mb-1">Select user account</label>
+            <select id="adminTargetUserSelect" class="w-full px-3 py-2 text-sm border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500"></select>
+          </div>
+          <button id="openAdminUserPasswordResetBtn" type="button" class="w-full px-4 py-2.5 rounded-xl text-sm font-bold bg-amber-500 hover:bg-amber-400 text-slate-950 transition">
+            Change User Password
+          </button>
+          <p class="text-[11px] text-slate-500">The selected user must enter their current password themselves to verify the change.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <div id="adminResetPasswordModal" class="fixed inset-0 z-50 hidden bg-slate-900/70 backdrop-blur-xs flex items-center justify-center p-4">
     <div class="bg-white rounded-2xl max-w-md w-full border border-slate-200 shadow-2xl overflow-hidden">
       <div class="px-6 py-4 bg-amber-500 text-slate-950">
-        <h3 class="text-base font-extrabold">Set Doctor Password</h3>
-        <p id="adminResetPasswordDoctorName" class="text-xs font-medium text-slate-900"></p>
+        <h3 class="text-base font-extrabold">Verify and Change Password</h3>
+        <p id="adminResetPasswordUserName" class="text-xs font-medium text-slate-900"></p>
       </div>
       <form id="adminResetPasswordForm" class="p-6 space-y-4">
         <p class="text-xs text-slate-600 leading-relaxed">
-          Set a temporary password of at least 8 characters. The doctor will be asked to change it after signing in.
+          Ask the selected user to enter their current password themselves, then enter and confirm the new password.
+          Passwords are sent directly to Firebase Authentication and are not saved in Firestore.
         </p>
         <div>
-          <label class="block text-xs font-bold text-slate-700 mb-1" for="adminResetPasswordInput">New temporary password *</label>
+          <label class="block text-xs font-bold text-slate-700 mb-1" for="adminCurrentPasswordInput">User's current password *</label>
+          <input id="adminCurrentPasswordInput" type="password" required autocomplete="off" placeholder="The selected user should enter it themselves" class="w-full px-3.5 py-2 text-sm border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500" />
+        </div>
+        <div>
+          <label class="block text-xs font-bold text-slate-700 mb-1" for="adminResetPasswordInput">New password *</label>
           <input id="adminResetPasswordInput" type="password" required minlength="8" maxlength="128" autocomplete="new-password" placeholder="8 to 128 characters" class="w-full px-3.5 py-2 text-sm border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500" />
+        </div>
+        <div>
+          <label class="block text-xs font-bold text-slate-700 mb-1" for="confirmAdminResetPasswordInput">Confirm new password *</label>
+          <input id="confirmAdminResetPasswordInput" type="password" required minlength="8" maxlength="128" autocomplete="new-password" placeholder="Enter the new password again" class="w-full px-3.5 py-2 text-sm border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500" />
         </div>
         <div class="flex items-center justify-end gap-2 pt-2">
           <button id="cancelAdminResetPasswordBtn" type="button" class="px-4 py-2 rounded-xl text-xs font-semibold bg-slate-100 text-slate-700 hover:bg-slate-200 transition">Cancel</button>
@@ -217,6 +285,9 @@
             </div>
             <div id="headerUserPhone" class="text-[10px] text-slate-400 font-mono">012000000</div>
           </div>
+          <button id="openAccountProfileBtn" type="button" class="ml-1 px-2.5 py-1 rounded-lg bg-teal-700 hover:bg-teal-600 text-[11px] font-semibold text-white transition">
+            My Profile
+          </button>
           <button id="logoutBtn" type="button" title="Switch Account / Logout" class="ml-1 px-2.5 py-1 rounded-lg bg-slate-700 hover:bg-rose-600 text-[11px] font-semibold text-slate-200 hover:text-white transition">
             Switch
           </button>
@@ -882,12 +953,9 @@
           </div>
         </div>
 
-        <p class="text-[11px] text-slate-500">Admins can email a secure password reset link. Deleting a profile removes app access; the Firebase Authentication account remains.</p>
-        <div id="doctorPasswordResetResult" role="status" aria-live="polite" class="hidden rounded-xl border border-amber-200 bg-amber-50 p-3 text-xs font-semibold text-amber-900"></div>
+        <p class="text-[11px] text-slate-500">Deleting a profile removes app access; the Firebase Authentication account remains. Users can change their own password from My Profile.</p>
         <div class="pt-3 border-t border-slate-200 flex items-center justify-end gap-2">
           <button type="button" id="deleteDoctorAccountBtn" class="hidden mr-auto px-3 py-2 rounded-xl text-xs font-bold bg-rose-100 text-rose-800 hover:bg-rose-200 transition">Delete doctor profile</button>
-          <button type="button" id="resetDoctorPasswordBtn" class="hidden px-3 py-2 rounded-xl text-xs font-bold bg-amber-100 text-amber-900 hover:bg-amber-200 transition">Reset password</button>
-          <button type="button" id="changeDoctorPasswordBtn" class="hidden px-3 py-2 rounded-xl text-xs font-bold bg-teal-100 text-teal-800 hover:bg-teal-200 transition">Change password</button>
           <button type="button" id="cancelDoctorModalBtn" class="px-4 py-2 rounded-xl text-xs font-semibold bg-slate-100 text-slate-700 hover:bg-slate-200 transition">Cancel</button>
           <button type="submit" class="px-5 py-2 rounded-xl text-xs font-bold bg-teal-600 hover:bg-teal-500 text-white shadow-sm transition">Save Surgeon Profile</button>
         </div>
@@ -903,9 +971,8 @@
 
   <script type="module">
     import { deleteApp, initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-    import { createUserWithEmailAndPassword, deleteUser, getAuth, sendPasswordResetEmail, signInWithEmailAndPassword, signOut, updatePassword } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+    import { createUserWithEmailAndPassword, deleteUser, getAdditionalUserInfo, getAuth, inMemoryPersistence, RecaptchaVerifier, setPersistence, signInWithEmailAndPassword, signInWithPhoneNumber, signOut, updatePassword } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
     import { getFirestore, doc, getDoc, getDocs, onSnapshot, collection, query, where, writeBatch, runTransaction, updateDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
-    import { getFunctions, httpsCallable } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-functions.js";
 
     // =========================================================================
     // CONSTANTS & OPERATING ROOM CONFIGURATION (Q3 & Q4)
@@ -1146,8 +1213,11 @@
 
     let db = null;
     let auth = null;
-    let functions = null;
     let firebaseUser = null;
+    let passwordResetConfirmation = null;
+    let passwordResetApp = null;
+    let passwordResetAuth = null;
+    let loginRecaptchaVerifier = null;
     let isCloudConnected = false;
     let cloudUnsubscribers = [];
     let occupancyBackfillInProgress = false;
@@ -1179,6 +1249,82 @@
       delete safeProfile.passwordHash;
       delete safeProfile.passwordSalt;
       return safeProfile;
+    }
+
+    function normalizePhoneNumber(phone) {
+      return String(phone || '').replace(/\D/g, '');
+    }
+
+    function getPhoneAuthEmail(phone) {
+      const normalizedPhone = normalizePhoneNumber(phone);
+      if (!/^\d{8,15}$/.test(normalizedPhone)) {
+        throw new Error('Enter a valid phone number containing 8 to 15 digits.');
+      }
+      return `phone-${normalizedPhone}@ppec-booking.firebaseapp.com`;
+    }
+
+    function getPhoneE164(phone) {
+      const rawPhone = String(phone || '').trim();
+      const digits = normalizePhoneNumber(rawPhone);
+      if (rawPhone.startsWith('+') && /^\d{8,15}$/.test(digits)) return `+${digits}`;
+      if (/^0[1-9]\d{7,9}$/.test(digits)) return `+855${digits.slice(1)}`;
+      if (/^855[1-9]\d{7,9}$/.test(digits)) return `+${digits}`;
+      throw new Error('Enter a Cambodian phone number starting with 0 or +855.');
+    }
+
+    function clearRecaptchaVerifier(verifier, containerId) {
+      if (verifier) verifier.clear();
+      if (containerId) document.getElementById(containerId)?.replaceChildren();
+      return null;
+    }
+
+    function getPhoneAuthErrorMessage(error) {
+      const code = error && typeof error === 'object' ? error.code : '';
+      if (code === 'auth/operation-not-allowed') {
+        return 'Firebase Phone sign-in is not enabled. Ask the Firebase project Admin to enable the Phone provider.';
+      }
+      if (code === 'auth/invalid-phone-number') {
+        return 'The phone number is invalid. Use a Cambodian number such as 0979956921 or +855979956921.';
+      }
+      if (code === 'auth/invalid-verification-code') {
+        return 'The SMS code is incorrect. Check the message and try again.';
+      }
+      if (code === 'auth/code-expired' || code === 'auth/session-expired') {
+        return 'The SMS code expired. Request a new verification code.';
+      }
+      if (code === 'auth/too-many-requests') {
+        return 'Firebase temporarily limited SMS requests. Wait and try again.';
+      }
+      if (code === 'auth/quota-exceeded') {
+        return 'Firebase SMS quota has been reached. Try later or check Firebase billing and SMS limits.';
+      }
+      if (code === 'auth/billing-not-enabled') {
+        return 'Firebase billing is not enabled for this project. Link a billing account or upgrade the Firebase plan to send SMS verification codes. SMS charges may apply.';
+      }
+      if (code === 'auth/captcha-check-failed' || code === 'auth/missing-recaptcha-token') {
+        return 'Phone verification could not pass reCAPTCHA. Refresh the page and try again.';
+      }
+      if (code === 'auth/invalid-app-credential' || code === 'auth/missing-client-identifier') {
+        return 'Firebase could not verify this app. Check reCAPTCHA and the app domain in Firebase Authentication settings.';
+      }
+      if (code === 'auth/unauthorized-domain') {
+        return 'This website domain is not authorized for Firebase Authentication. Add it under Authentication > Settings > Authorized domains.';
+      }
+      if (code === 'auth/network-request-failed') {
+        return 'Could not reach Firebase Phone Authentication. Check your internet connection and try again.';
+      }
+      if (code === 'auth/credential-already-in-use' || code === 'auth/phone-number-already-exists') {
+        return 'This phone number is already linked to another Firebase account. Contact the administrator.';
+      }
+      if (code === 'auth/provider-already-linked') {
+        return 'This account already has a verified phone number. Contact the administrator if it is incorrect.';
+      }
+      if (code === 'auth/requires-recent-login') {
+        return 'For security, sign out and sign in again before linking a phone number.';
+      }
+      if (error && typeof error.message === 'string' && error.message && !error.code) return error.message;
+      console.error('Firebase phone verification failed:', error);
+      return 'Could not verify the phone number. Check Firebase Phone Authentication settings and try again.';
     }
 
     function showToast(msg) {
@@ -1252,7 +1398,6 @@
         const app = initializeApp(firebaseConfig);
         auth = getAuth(app);
         db = getFirestore(app);
-        functions = getFunctions(app, 'us-central1');
         setText('cloudSyncText', 'FIREBASE READY • SIGN IN');
       } catch (e) {
         reportCloudError('Firebase initialization error:', e);
@@ -1443,12 +1588,12 @@
         return 'Firebase Authentication is not initialized. Finish Firebase Authentication setup.';
       }
       if (code === 'auth/invalid-credential' || code === 'auth/user-not-found' || code === 'auth/wrong-password') {
-        return 'Email or password is incorrect.';
+        return 'Phone number or password is incorrect. If this account has not been set up for phone sign-in, contact your Admin.';
       }
       if (code === 'auth/operation-not-allowed') {
         return 'Firebase Authentication is not enabled for this project.';
       }
-      if (code === 'auth/invalid-email') return 'Enter a valid email address.';
+      if (code === 'auth/invalid-email') return 'Enter a valid phone number.';
       if (code === 'auth/invalid-api-key' || code === 'auth/project-not-found') {
         return 'The Firebase project configuration is invalid. Check the app Firebase settings.';
       }
@@ -1458,7 +1603,7 @@
       if (code === 'permission-denied' || code === 'firestore/permission-denied') {
         return 'Authentication succeeded, but Firestore denied access. Check Firestore database and security rules.';
       }
-      return 'Could not sign in. Check the email, password, Firebase Authentication settings, and browser console.';
+      return 'Could not sign in. Check the phone number, password, Firebase Authentication settings, and browser console.';
     }
 
     function ensureCloudSession() {
@@ -1469,35 +1614,23 @@
 
     function getFirebaseAccountActionError(error, action) {
       const code = error && typeof error === 'object' ? error.code : '';
-      if (code === 'functions/permission-denied' || code === 'functions/unauthenticated') {
-        return 'Only a signed-in, approved Admin can update a doctor password.';
-      }
-      if (code === 'functions/not-found') {
-        return 'The Admin password update service is not deployed. This feature requires Firebase Blaze; upgrade the project and deploy adminSetDoctorPassword.';
-      }
-      if (code === 'functions/unavailable') {
-        return 'Could not reach Firebase Functions. Check the connection and try again.';
-      }
-      if (code === 'functions/invalid-argument') {
-        return 'Choose a password with 8 to 128 characters.';
+      if (code === 'auth/invalid-credential' || code === 'auth/wrong-password') {
+        return 'The current password is incorrect. Ask the account owner to enter their own current password.';
       }
       if (code === 'auth/invalid-email') {
-        return 'Enter the same valid email address that is registered in Firebase Authentication.';
+        return 'The selected account phone number is invalid. Check the user profile.';
       }
       if (code === 'auth/user-not-found') {
-        return 'No Firebase Authentication account was found for this email. Confirm the email or ask the Admin to check the account in Firebase Console.';
+        return 'No Firebase Authentication account was found for this phone number. Ask the Admin to check the account setup.';
       }
       if (code === 'auth/too-many-requests') {
-        return 'Firebase temporarily blocked password reset requests. Wait a few minutes and try again.';
+        return 'Firebase temporarily blocked sign-in attempts. Wait a few minutes and try again.';
       }
       if (code === 'auth/network-request-failed') {
         return 'Could not reach Firebase Authentication. Check your internet connection and try again.';
       }
       if (code === 'auth/operation-not-allowed') {
         return 'Enable Email/Password in Firebase Authentication sign-in providers, then try again.';
-      }
-      if (code === 'auth/unauthorized-continue-uri') {
-        return 'Firebase rejected the password reset link domain. Add this app domain under Firebase Authentication > Settings > Authorized domains.';
       }
       if (code === 'auth/weak-password') {
         return 'Choose a password with at least 8 characters.';
@@ -1640,7 +1773,7 @@
     // =========================================================================
     async function handleLoginSubmit(e) {
       e.preventDefault();
-      const email = document.getElementById('loginEmailInput').value.trim().toLowerCase();
+      const phone = document.getElementById('loginPhoneInput').value;
       const pass = document.getElementById('loginPasswordInput').value;
       const errBanner = document.getElementById('loginErrorBanner');
       errBanner.classList.add('hidden');
@@ -1652,7 +1785,7 @@
       }
 
       try {
-        const credential = await signInWithEmailAndPassword(auth, email, pass);
+        const credential = await signInWithEmailAndPassword(auth, getPhoneAuthEmail(phone), pass);
         firebaseUser = credential.user;
         const profileSnapshot = await getDoc(doc(db, FIRESTORE_COLLECTIONS.users, credential.user.uid));
         if (!profileSnapshot.exists()) {
@@ -2754,21 +2887,10 @@
       setText(
         'doctorModalDescription',
         docObj
-          ? 'Edit the doctor profile. Send a password reset link if the doctor needs to change their password.'
-          : 'Enter an initial password of at least 8 characters. The doctor will sign in with this email and password.'
+          ? 'Edit the doctor profile.'
+          : 'Enter an initial password of at least 8 characters. The doctor will sign in with this phone number and password.'
       );
-      const resetResult = document.getElementById('doctorPasswordResetResult');
-      resetResult.textContent = '';
-      resetResult.classList.add('hidden');
       document.getElementById('deleteDoctorAccountBtn').classList.toggle('hidden', !docObj);
-      document.getElementById('resetDoctorPasswordBtn').classList.toggle(
-        'hidden',
-        !docObj || loggedInUser?.role !== 'ADMIN'
-      );
-      document.getElementById('changeDoctorPasswordBtn').classList.toggle(
-        'hidden',
-        !docObj || !firebaseUser || docObj.authUid !== firebaseUser.uid
-      );
       document.getElementById('docEmailInput').readOnly = Boolean(docObj);
       if (docObj) {
         document.getElementById('editDoctorInternalId').value = docObj.id;
@@ -2823,30 +2945,156 @@
       // Login Form
       document.getElementById('loginForm').addEventListener('submit', handleLoginSubmit);
       document.getElementById('forgotPasswordBtn').addEventListener('click', async () => {
-        const email = document.getElementById('loginEmailInput').value.trim().toLowerCase();
         const status = document.getElementById('passwordResetStatus');
-        const button = document.getElementById('forgotPasswordBtn');
-        status.classList.add('hidden');
-        if (!email) {
-          status.textContent = 'Enter your registered email address first.';
-          status.classList.remove('hidden');
-          return;
-        }
-        if (!auth) {
+        const phone = document.getElementById('loginPhoneInput').value;
+        status.classList.remove('hidden');
+        document.getElementById('passwordResetCodeSection').classList.add('hidden');
+        document.getElementById('passwordResetCodeInput').value = '';
+        document.getElementById('forgotNewPasswordInput').value = '';
+        document.getElementById('forgotConfirmPasswordInput').value = '';
+        passwordResetConfirmation = null;
+        loginRecaptchaVerifier = clearRecaptchaVerifier(loginRecaptchaVerifier, 'passwordResetRecaptcha');
+        if (passwordResetAuth?.currentUser) await signOut(passwordResetAuth);
+        if (passwordResetApp) await deleteApp(passwordResetApp);
+        passwordResetAuth = null;
+        passwordResetApp = null;
+        if (!auth || !db) {
           status.textContent = 'Firebase Authentication is not ready. Refresh the page and try again.';
+          return;
+        }
+        let phoneE164;
+        try {
+          phoneE164 = getPhoneE164(phone);
+        } catch (error) {
+          status.textContent = error.message;
+          document.getElementById('loginPhoneInput').focus();
+          return;
+        }
+        const button = document.getElementById('forgotPasswordBtn');
+        button.disabled = true;
+        status.textContent = 'Sending SMS verification code...';
+        try {
+          passwordResetApp = initializeApp(firebaseConfig, `password-reset-${Date.now()}-${Math.random().toString(36).slice(2)}`);
+          passwordResetAuth = getAuth(passwordResetApp);
+          await setPersistence(passwordResetAuth, inMemoryPersistence);
+          loginRecaptchaVerifier = new RecaptchaVerifier(passwordResetAuth, 'passwordResetRecaptcha', { size: 'invisible' });
+          passwordResetConfirmation = await signInWithPhoneNumber(passwordResetAuth, phoneE164, loginRecaptchaVerifier);
+          loginRecaptchaVerifier = clearRecaptchaVerifier(loginRecaptchaVerifier, 'passwordResetRecaptcha');
+          document.getElementById('passwordResetCodeSection').classList.remove('hidden');
+          status.textContent = `A verification code was sent to ${phoneE164}. Enter the code and choose a new password.`;
+          document.getElementById('passwordResetCodeInput').focus();
+        } catch (error) {
+          loginRecaptchaVerifier = clearRecaptchaVerifier(loginRecaptchaVerifier, 'passwordResetRecaptcha');
+          passwordResetConfirmation = null;
+          if (passwordResetAuth?.currentUser) {
+            try {
+              await signOut(passwordResetAuth);
+            } catch (signOutError) {
+              console.error('Could not sign out the failed password recovery session:', signOutError);
+            }
+          }
+          if (passwordResetApp) {
+            try {
+              await deleteApp(passwordResetApp);
+            } catch (deleteError) {
+              console.error('Could not close the failed password recovery session:', deleteError);
+            }
+          }
+          passwordResetAuth = null;
+          passwordResetApp = null;
+          console.error('Password recovery SMS request failed:', error);
+          status.textContent = getPhoneAuthErrorMessage(error);
+        } finally {
+          button.disabled = false;
+        }
+      });
+      document.getElementById('confirmForgotPasswordBtn').addEventListener('click', async () => {
+        const status = document.getElementById('passwordResetStatus');
+        const code = document.getElementById('passwordResetCodeInput').value.trim();
+        const newPassword = document.getElementById('forgotNewPasswordInput').value;
+        const confirmPassword = document.getElementById('forgotConfirmPasswordInput').value;
+        if (!passwordResetConfirmation || !passwordResetAuth || !passwordResetApp) {
+          status.textContent = 'Request an SMS verification code first.';
           status.classList.remove('hidden');
           return;
         }
+        if (!/^\d{6}$/.test(code)) {
+          status.textContent = 'Enter the 6-digit SMS verification code.';
+          status.classList.remove('hidden');
+          document.getElementById('passwordResetCodeInput').focus();
+          return;
+        }
+        if (newPassword.length < 8 || newPassword.length > 128) {
+          status.textContent = 'Choose a password with 8 to 128 characters.';
+          status.classList.remove('hidden');
+          document.getElementById('forgotNewPasswordInput').focus();
+          return;
+        }
+        if (newPassword !== confirmPassword) {
+          status.textContent = 'The new password and confirmation do not match.';
+          status.classList.remove('hidden');
+          document.getElementById('forgotConfirmPasswordInput').focus();
+          return;
+        }
+        const button = document.getElementById('confirmForgotPasswordBtn');
         button.disabled = true;
+        let passwordUpdated = false;
+        let retryVerification = false;
         try {
-          await sendPasswordResetEmail(auth, email);
-          status.textContent = `Password reset request submitted for ${email}. If this email belongs to a Firebase Authentication account, Firebase sent a reset link. Check Inbox and Spam/Junk. For privacy, Firebase does not confirm whether the account exists.`;
-          status.classList.remove('hidden');
+          const credential = await passwordResetConfirmation.confirm(code);
+          const additionalInfo = getAdditionalUserInfo(credential);
+          if (additionalInfo?.isNewUser) {
+            await deleteUser(credential.user);
+            throw new Error('This phone is not linked to an existing app account. Contact the administrator to link the phone before password recovery.');
+          }
+          const resetDb = getFirestore(passwordResetApp);
+          const profileSnapshot = await getDoc(doc(resetDb, FIRESTORE_COLLECTIONS.users, credential.user.uid));
+          if (!profileSnapshot.exists()) {
+            throw new Error('No app profile is linked to this verified phone number. Contact the administrator.');
+          }
+          const profile = sanitizeUserProfile({ ...profileSnapshot.data(), authUid: profileSnapshot.id });
+          const enteredPhone = getPhoneE164(document.getElementById('loginPhoneInput').value);
+          if (!profile.id || !['ADMIN', 'DOCTOR'].includes(profile.role) || profile.status !== 'Approved') {
+            throw new Error('This account is not approved to use the platform. Contact the administrator.');
+          }
+          if (credential.user.phoneNumber !== enteredPhone || getPhoneE164(profile.phone) !== enteredPhone) {
+            throw new Error('The verified phone number does not match the approved account profile.');
+          }
+          await updatePassword(credential.user, newPassword);
+          passwordUpdated = true;
+          await updateDoc(doc(resetDb, FIRESTORE_COLLECTIONS.users, credential.user.uid), {
+            mustChangePassword: false
+          });
+          status.textContent = 'Password reset successfully. You can now sign in with your phone number and new password.';
+          document.getElementById('passwordResetCodeSection').classList.add('hidden');
+          document.getElementById('loginPasswordInput').value = '';
+          passwordResetConfirmation = null;
         } catch (error) {
-          console.error('Password reset email failed:', error);
-          status.textContent = getFirebaseAccountActionError(error, 'Password reset email');
-          status.classList.remove('hidden');
+          console.error('SMS password reset failed:', error);
+          retryVerification = error && error.code === 'auth/invalid-verification-code';
+          status.textContent = passwordUpdated
+            ? 'Your password was changed, but the account profile could not be updated. Try signing in with the new password; contact the administrator if it is rejected.'
+            : (error && error.message && !error.code ? error.message : getPhoneAuthErrorMessage(error));
         } finally {
+          if (!retryVerification) {
+            if (passwordResetAuth?.currentUser) {
+              try {
+                await signOut(passwordResetAuth);
+              } catch (error) {
+                console.error('Could not sign out after SMS password recovery:', error);
+              }
+            }
+            if (passwordResetApp) {
+              try {
+                await deleteApp(passwordResetApp);
+              } catch (error) {
+                console.error('Could not close the SMS password recovery session:', error);
+              }
+            }
+            passwordResetConfirmation = null;
+            passwordResetAuth = null;
+            passwordResetApp = null;
+          }
           button.disabled = false;
         }
       });
@@ -2874,13 +3122,83 @@
         document.getElementById('loginGateOverlay').classList.remove('hidden');
       });
 
+      let resetPasswordTargetUserId = '';
+      let resetPasswordReturnModalId = '';
+      document.getElementById('openAccountProfileBtn').addEventListener('click', async () => {
+        if (!loggedInUser || !firebaseUser) {
+          showToast('Sign in to view your account profile.');
+          return;
+        }
+        setText('accountProfileName', loggedInUser.name || '');
+        setText('accountProfilePhone', loggedInUser.phone || '');
+        setText('accountProfileRole', loggedInUser.role || '');
+        const adminControls = document.getElementById('adminUserPasswordControls');
+        adminControls.classList.toggle('hidden', loggedInUser.role !== 'ADMIN');
+        if (loggedInUser.role === 'ADMIN') {
+          try {
+            const profileSnapshot = await getDocs(collection(db, FIRESTORE_COLLECTIONS.users));
+            users = profileSnapshot.docs
+              .map(profileDoc => sanitizeUserProfile({ ...profileDoc.data(), authUid: profileDoc.id }))
+              .filter(profile => profile.id);
+            const select = document.getElementById('adminTargetUserSelect');
+            select.replaceChildren();
+            users
+              .filter(user => user.authUid && ['ADMIN', 'DOCTOR'].includes(user.role)
+                && user.status === 'Approved'
+                && user.authUid !== firebaseUser.uid)
+              .sort((a, b) => String(a.name || '').localeCompare(String(b.name || '')))
+              .forEach(user => {
+                const option = document.createElement('option');
+                option.value = user.id;
+                option.textContent = `${user.name || user.id} • ${user.phone || 'No phone'} • ${user.role}`;
+                select.append(option);
+              });
+            document.getElementById('openAdminUserPasswordResetBtn').disabled = select.options.length === 0;
+            if (select.options.length === 0) {
+              showToast('No other user accounts are available to update.');
+            }
+          } catch (error) {
+            console.error('Could not load user accounts for Admin password management:', error);
+            showToast('Could not load user accounts. Check Admin access and Firestore rules.');
+            return;
+          }
+        }
+        document.getElementById('accountProfileModal').classList.remove('hidden');
+      });
+      document.getElementById('closeAccountProfileBtn').addEventListener('click', () => {
+        document.getElementById('accountProfileModal').classList.add('hidden');
+      });
+      document.getElementById('openAdminUserPasswordResetBtn').addEventListener('click', () => {
+        const target = users.find(user => user.id === document.getElementById('adminTargetUserSelect').value);
+        if (!target || !target.authUid || !target.phone || target.status !== 'Approved'
+          || loggedInUser?.role !== 'ADMIN' || !auth || !db) {
+          showToast('Select an approved user with a phone number and sign in as Admin before changing their password.');
+          return;
+        }
+        resetPasswordTargetUserId = target.id;
+        resetPasswordReturnModalId = 'accountProfileModal';
+        setText('adminResetPasswordUserName', `${target.name || target.id} • ${target.phone} • ${target.role}`);
+        document.getElementById('adminCurrentPasswordInput').value = '';
+        document.getElementById('adminResetPasswordInput').value = '';
+        document.getElementById('confirmAdminResetPasswordInput').value = '';
+        document.getElementById('accountProfileModal').classList.add('hidden');
+        document.getElementById('adminResetPasswordModal').classList.remove('hidden');
+        document.getElementById('adminCurrentPasswordInput').focus();
+      });
+
       // First-Login Password Change Modal (Q2)
-      let returnToDoctorProfileAfterPasswordChange = false;
+      let passwordChangeReturnModalId = '';
       document.getElementById('changePasswordForm').addEventListener('submit', async (e) => {
         e.preventDefault();
         const newPass = document.getElementById('newPasswordInput').value;
+        const confirmPass = document.getElementById('confirmNewPasswordInput').value;
         if (newPass.length < 8 || newPass.length > 128 || !loggedInUser || !firebaseUser) {
           showToast('Sign in and choose a password with 8 to 128 characters.');
+          return;
+        }
+        if (newPass !== confirmPass) {
+          showToast('The new password and confirmation do not match.');
+          document.getElementById('confirmNewPasswordInput').focus();
           return;
         }
         try {
@@ -2893,9 +3211,10 @@
           users = users.map(user => user.id === updatedUser.id ? updatedUser : user);
           document.getElementById('changePasswordModal').classList.add('hidden');
           document.getElementById('newPasswordInput').value = '';
-          if (returnToDoctorProfileAfterPasswordChange) {
-            document.getElementById('doctorProfileModal').classList.remove('hidden');
-            returnToDoctorProfileAfterPasswordChange = false;
+          document.getElementById('confirmNewPasswordInput').value = '';
+          if (passwordChangeReturnModalId) {
+            document.getElementById(passwordChangeReturnModalId).classList.remove('hidden');
+            passwordChangeReturnModalId = '';
           }
           startCloudSync();
           showToast('Password updated successfully!');
@@ -2906,25 +3225,25 @@
             : getFirebaseAccountActionError(error, 'Password update'));
         }
       });
-      document.getElementById('changeDoctorPasswordBtn').addEventListener('click', () => {
-        const doctorId = document.getElementById('editDoctorInternalId').value;
-        const doctor = users.find(user => user.id === doctorId);
-        if (!loggedInUser || !firebaseUser || !doctor || doctor.authUid !== firebaseUser.uid) {
-          showToast('You can only change the password for your own signed-in account.');
+      document.getElementById('openMyPasswordChangeBtn').addEventListener('click', () => {
+        if (!loggedInUser || !firebaseUser) {
+          showToast('Sign in to change your password.');
           return;
         }
         document.getElementById('newPasswordInput').value = '';
+        document.getElementById('confirmNewPasswordInput').value = '';
         document.getElementById('cancelChangePasswordBtn').classList.remove('hidden');
-        returnToDoctorProfileAfterPasswordChange = true;
-        document.getElementById('doctorProfileModal').classList.add('hidden');
+        passwordChangeReturnModalId = 'accountProfileModal';
+        document.getElementById('accountProfileModal').classList.add('hidden');
         document.getElementById('changePasswordModal').classList.remove('hidden');
       });
       document.getElementById('cancelChangePasswordBtn').addEventListener('click', () => {
         document.getElementById('changePasswordModal').classList.add('hidden');
         document.getElementById('newPasswordInput').value = '';
-        if (returnToDoctorProfileAfterPasswordChange) {
-          document.getElementById('doctorProfileModal').classList.remove('hidden');
-          returnToDoctorProfileAfterPasswordChange = false;
+        document.getElementById('confirmNewPasswordInput').value = '';
+        if (passwordChangeReturnModalId) {
+          document.getElementById(passwordChangeReturnModalId).classList.remove('hidden');
+          passwordChangeReturnModalId = '';
         }
       });
 
@@ -3120,63 +3439,112 @@
       document.getElementById('addDoctorModalBtn').addEventListener('click', () => openDoctorProfileModal(null));
       document.getElementById('closeDoctorModalBtn').addEventListener('click', () => document.getElementById('doctorProfileModal').classList.add('hidden'));
       document.getElementById('cancelDoctorModalBtn').addEventListener('click', () => document.getElementById('doctorProfileModal').classList.add('hidden'));
-      let resetPasswordDoctorId = '';
-      document.getElementById('resetDoctorPasswordBtn').addEventListener('click', () => {
-        const doctorId = document.getElementById('editDoctorInternalId').value;
-        const doctor = users.find(user => user.id === doctorId);
-        if (!doctor || loggedInUser?.role !== 'ADMIN' || !functions) {
-          showToast('Sign in as Admin and connect to Firebase Functions before updating a password.');
-          return;
-        }
-        resetPasswordDoctorId = doctor.id;
-        document.getElementById('adminResetPasswordDoctorName').textContent = `${doctor.name} • ${doctor.email}`;
-        document.getElementById('adminResetPasswordInput').value = '';
-        document.getElementById('doctorProfileModal').classList.add('hidden');
-        document.getElementById('adminResetPasswordModal').classList.remove('hidden');
-        document.getElementById('adminResetPasswordInput').focus();
-      });
       document.getElementById('adminResetPasswordForm').addEventListener('submit', async event => {
         event.preventDefault();
-        const doctor = users.find(user => user.id === resetPasswordDoctorId);
+        const target = users.find(user => user.id === resetPasswordTargetUserId);
         const submitButton = document.getElementById('submitAdminResetPasswordBtn');
+        const currentPassword = document.getElementById('adminCurrentPasswordInput').value;
         const password = document.getElementById('adminResetPasswordInput').value;
-        if (!doctor || !doctor.authUid || loggedInUser?.role !== 'ADMIN' || !functions) {
-          showToast('Sign in as Admin and connect to Firebase Functions before updating a password.');
+        const confirmPassword = document.getElementById('confirmAdminResetPasswordInput').value;
+        if (!target || !target.authUid || !target.phone || target.status !== 'Approved'
+          || loggedInUser?.role !== 'ADMIN' || !auth || !db) {
+          showToast('Sign in as Admin and select an approved user with a phone number.');
+          return;
+        }
+        if (!currentPassword) {
+          showToast('Ask the selected user to enter their current password to verify the change.');
           return;
         }
         if (password.length < 8 || password.length > 128) {
           showToast('Choose a password with 8 to 128 characters.');
           return;
         }
+        if (password !== confirmPassword) {
+          showToast('The new password and confirmation do not match.');
+          document.getElementById('confirmAdminResetPasswordInput').focus();
+          return;
+        }
         submitButton.disabled = true;
+        let secondaryApp = null;
+        let secondaryAuth = null;
+        let passwordUpdated = false;
         try {
-          await httpsCallable(functions, 'adminSetDoctorPassword')({
-            doctorUid: doctor.authUid,
-            password
-          });
-          const updatedDoctor = { ...doctor, mustChangePassword: true };
-          users = users.map(user => user.id === doctor.id ? updatedDoctor : user);
+          secondaryApp = initializeApp(firebaseConfig, `password-update-${Date.now()}-${Math.random().toString(36).slice(2)}`);
+          secondaryAuth = getAuth(secondaryApp);
+          await setPersistence(secondaryAuth, inMemoryPersistence);
+          const targetCredential = await signInWithEmailAndPassword(
+            secondaryAuth,
+            getPhoneAuthEmail(target.phone),
+            currentPassword
+          );
+          if (targetCredential.user.uid !== target.authUid) {
+            throw new Error('The selected phone number does not match this user profile.');
+          }
+          await updatePassword(targetCredential.user, password);
+          passwordUpdated = true;
+          let profileUpdateWarning = '';
+          try {
+            const targetDb = getFirestore(secondaryApp);
+            await updateDoc(doc(targetDb, FIRESTORE_COLLECTIONS.users, targetCredential.user.uid), {
+              mustChangePassword: false
+            });
+          } catch (error) {
+            console.error('Password changed, but failed to update the user profile flag:', error);
+            profileUpdateWarning = ' The password changed, but the account profile could not be updated; contact the administrator if a password-change prompt appears again.';
+          }
+          const updatedTarget = { ...target, mustChangePassword: false };
+          users = users.map(user => user.id === target.id ? updatedTarget : user);
+          if (loggedInUser?.authUid === target.authUid) loggedInUser = updatedTarget;
+          document.getElementById('adminCurrentPasswordInput').value = '';
           document.getElementById('adminResetPasswordInput').value = '';
-          const notice = document.getElementById('doctorPasswordResetResult');
-          notice.textContent = `Password updated for ${doctor.name}. Share the temporary password securely and ask the doctor to change it after signing in.`;
-          notice.classList.remove('hidden');
+          document.getElementById('confirmAdminResetPasswordInput').value = '';
           document.getElementById('adminResetPasswordModal').classList.add('hidden');
-          resetPasswordDoctorId = '';
-          document.getElementById('doctorProfileModal').classList.remove('hidden');
+          if (resetPasswordReturnModalId) {
+            document.getElementById(resetPasswordReturnModalId).classList.remove('hidden');
+          }
+          resetPasswordTargetUserId = '';
+          resetPasswordReturnModalId = '';
           renderAll();
-          showToast(`Password updated for ${doctor.name}.`);
+          showToast(`Password updated for ${target.name || target.id}.${profileUpdateWarning}`);
         } catch (error) {
-          console.error('Doctor password update failed:', error);
-          showToast(getFirebaseAccountActionError(error, 'Password update'));
+          if (passwordUpdated) {
+            console.error('Password was changed but finishing the account update failed:', error);
+            showToast('Password changed, but the account screen could not be updated. Sign in with the new password.');
+          } else {
+            console.error('User password update failed:', error);
+            showToast(getFirebaseAccountActionError(error, 'Password update'));
+          }
         } finally {
+          if (secondaryAuth?.currentUser) {
+            try {
+              await signOut(secondaryAuth);
+            } catch (error) {
+              console.error('Could not sign out the temporary user password session:', error);
+            }
+          }
+          if (secondaryApp) {
+            try {
+              await deleteApp(secondaryApp);
+            } catch (error) {
+              console.error('Could not close the temporary user password session:', error);
+            }
+          }
           submitButton.disabled = false;
+          document.getElementById('adminCurrentPasswordInput').value = '';
+          document.getElementById('adminResetPasswordInput').value = '';
+          document.getElementById('confirmAdminResetPasswordInput').value = '';
         }
       });
       document.getElementById('cancelAdminResetPasswordBtn').addEventListener('click', () => {
+        document.getElementById('adminCurrentPasswordInput').value = '';
         document.getElementById('adminResetPasswordInput').value = '';
+        document.getElementById('confirmAdminResetPasswordInput').value = '';
         document.getElementById('adminResetPasswordModal').classList.add('hidden');
-        resetPasswordDoctorId = '';
-        document.getElementById('doctorProfileModal').classList.remove('hidden');
+        if (resetPasswordReturnModalId) {
+          document.getElementById(resetPasswordReturnModalId).classList.remove('hidden');
+        }
+        resetPasswordTargetUserId = '';
+        resetPasswordReturnModalId = '';
       });
       document.getElementById('deleteDoctorAccountBtn').addEventListener('click', async event => {
         const button = event.currentTarget;
@@ -3249,10 +3617,11 @@
           if (loggedInUser.role !== 'ADMIN') {
             throw new Error('Only an Admin can add or edit doctor profiles.');
           }
+          const loginEmail = getPhoneAuthEmail(docObj.phone);
           const duplicate = users.find(user => user.id !== docObj.id && (
             String(user.email || '').trim().toLowerCase() === docObj.email.toLowerCase()
             || String(user.doctorCode || '').trim().toLowerCase() === docObj.doctorCode.toLowerCase()
-            || String(user.phone || '').replace(/\D/g, '') === docObj.phone.replace(/\D/g, '')
+            || normalizePhoneNumber(user.phone) === normalizePhoneNumber(docObj.phone)
           ));
           if (duplicate) {
             throw new Error('Another profile already uses this email, Doctor ID, or phone number.');
@@ -3266,7 +3635,7 @@
           const currentDuplicate = latestUsers.find(user => user.id !== docObj.id && (
             String(user.email || '').trim().toLowerCase() === docObj.email.toLowerCase()
             || String(user.doctorCode || '').trim().toLowerCase() === docObj.doctorCode.toLowerCase()
-            || String(user.phone || '').replace(/\D/g, '') === docObj.phone.replace(/\D/g, '')
+            || normalizePhoneNumber(user.phone) === normalizePhoneNumber(docObj.phone)
           ));
           if (currentDuplicate) {
             throw new Error('Another profile already uses this email, Doctor ID, or phone number.');
@@ -3274,6 +3643,9 @@
 
           if (existingId) {
             if (!existingProfile) throw new Error('Doctor profile is no longer available. Refresh and try again.');
+            if (normalizePhoneNumber(docObj.phone) !== normalizePhoneNumber(existingProfile.phone)) {
+              throw new Error('A doctor login phone number cannot be changed in the profile editor. Update the Firebase Authentication email alias first.');
+            }
             if (docObj.email.toLowerCase() !== String(existingProfile.email || '').toLowerCase()) {
               throw new Error('Email address cannot be changed from the profile editor.');
             }
@@ -3360,7 +3732,7 @@
           }
           docObj.id = nextDoctorProfileId();
           const codeIndexRef = await doctorIndexRef('_ppec_doctor_codes', docObj.doctorCode.trim().toLowerCase());
-          const phoneIndexRef = await doctorIndexRef('_ppec_doctor_phones', docObj.phone.replace(/\D/g, ''));
+          const phoneIndexRef = await doctorIndexRef('_ppec_doctor_phones', normalizePhoneNumber(docObj.phone));
           const profileIndexRef = await doctorIndexRef('_ppec_doctor_ids', docObj.id.toLowerCase());
           const secondaryApp = initializeApp(firebaseConfig, `doctor-${Date.now()}-${Math.random().toString(36).slice(2)}`);
           const secondaryAuth = getAuth(secondaryApp);
@@ -3369,7 +3741,7 @@
           try {
             newAuthUser = (await createUserWithEmailAndPassword(
               secondaryAuth,
-              docObj.email.toLowerCase(),
+              loginEmail,
               initialPassword
             )).user;
             const profileRef = doc(db, FIRESTORE_COLLECTIONS.users, newAuthUser.uid);
@@ -3381,7 +3753,7 @@
               ...docObj,
               mustChangePassword: false,
               authUid: newAuthUser.uid,
-              phoneKey: docObj.phone.replace(/\D/g, '')
+              phoneKey: normalizePhoneNumber(docObj.phone)
             });
             await runTransaction(db, async transaction => {
               const [codeSnapshot, phoneSnapshot, profileIdSnapshot, accountSnapshot] = await Promise.all([
@@ -3460,7 +3832,7 @@
           renderAll();
           document.getElementById('doctorProfileModal').classList.add('hidden');
           showToast(docObj.status === 'Approved'
-            ? `Doctor account created. Share ${docObj.email} and the initial password securely.`
+            ? `Doctor account created. Share phone number ${docObj.phone} and the initial password securely.`
             : 'Doctor account created as Suspended. Sign-in remains blocked until approved.');
         } catch (error) {
           console.error('Doctor profile save failed:', error);
