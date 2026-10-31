@@ -125,11 +125,15 @@ service cloud.firestore {
     }
 
     match /_ppec_doctor_codes/{documentId} {
-      allow read, write: if false;
+      allow read, write: if isAdmin();
     }
 
     match /_ppec_doctor_phones/{documentId} {
-      allow read, write: if false;
+      allow read, write: if isAdmin();
+    }
+
+    match /_ppec_doctor_ids/{documentId} {
+      allow read, write: if isAdmin();
     }
 
     match /{document=**} {

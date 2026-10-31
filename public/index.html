@@ -79,16 +79,16 @@
       <!-- Login Form -->
       <form id="loginForm" class="p-6 space-y-4">
         <div id="loginErrorBanner" class="hidden p-3 rounded-xl bg-rose-50 border border-rose-200 text-xs font-semibold text-rose-700">
-          Invalid phone/email or password, or account is pending Admin approval.
+          Invalid email or password, or account is pending Admin approval.
         </div>
 
         <div>
-          <label class="block text-xs font-bold text-slate-700 mb-1">Doctor / Admin Phone Number or Email *</label>
-          <input id="loginPhoneInput" type="text" required autocomplete="username" placeholder="Enter your registered phone number or email" class="w-full px-3.5 py-2.5 text-sm bg-slate-50 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500 focus:bg-white" />
+          <label class="block text-xs font-bold text-slate-700 mb-1">Doctor / Admin Email *</label>
+          <input id="loginEmailInput" type="email" required autocomplete="username" placeholder="Enter your registered email" class="w-full px-3.5 py-2.5 text-sm bg-slate-50 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500 focus:bg-white" />
         </div>
 
         <div>
-          <label class="block text-xs font-bold text-slate-700 mb-1">Password (new accounts start with "1") *</label>
+          <label class="block text-xs font-bold text-slate-700 mb-1">Password *</label>
           <input id="loginPasswordInput" type="password" required autocomplete="current-password" placeholder="Enter your password" class="w-full px-3.5 py-2.5 text-sm bg-slate-50 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500 focus:bg-white" />
         </div>
 
@@ -97,7 +97,9 @@
           <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
         </button>
 
-        <p class="text-[11px] text-slate-500">Sign in with your registered phone number or email. New accounts use temporary password "1" and must change it at first sign-in.</p>
+        <button id="forgotPasswordBtn" type="button" class="w-full text-xs font-semibold text-teal-700 hover:text-teal-900">Forgot password? Send a reset link to your email</button>
+        <div id="passwordResetStatus" role="status" aria-live="polite" class="hidden p-3 rounded-xl bg-teal-50 border border-teal-200 text-xs font-semibold text-teal-800"></div>
+        <p class="text-[11px] text-slate-500">Sign in with your registered email and Firebase Authentication password.</p>
       </form>
     </div>
   </div>
@@ -115,7 +117,7 @@
       </div>
       <form id="changePasswordForm" class="p-6 space-y-4">
         <p class="text-xs text-slate-600 leading-relaxed">
-          Choose a new password of at least 8 characters. Your phone and email sign-ins will use the same password.
+          Choose a new password of at least 8 characters for your email sign-in.
         </p>
         <div>
           <label class="block text-xs font-bold text-slate-700 mb-1">New Password *</label>
@@ -141,15 +143,15 @@
       </div>
       <form id="adminResetPasswordForm" class="p-6 space-y-4">
         <p class="text-xs text-slate-600 leading-relaxed">
-          Enter a new password of at least 8 characters. It will replace the doctor's current password for phone and email sign-in.
+          Set a temporary password of at least 8 characters. The doctor will be asked to change it after signing in.
         </p>
         <div>
-          <label class="block text-xs font-bold text-slate-700 mb-1" for="adminResetPasswordInput">New Password *</label>
-          <input id="adminResetPasswordInput" type="password" required minlength="8" maxlength="128" autocomplete="new-password" placeholder="At least 8 characters" class="w-full px-3.5 py-2 text-sm border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500" />
+          <label class="block text-xs font-bold text-slate-700 mb-1" for="adminResetPasswordInput">New temporary password *</label>
+          <input id="adminResetPasswordInput" type="password" required minlength="8" maxlength="128" autocomplete="new-password" placeholder="8 to 128 characters" class="w-full px-3.5 py-2 text-sm border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500" />
         </div>
         <div class="flex items-center justify-end gap-2 pt-2">
           <button id="cancelAdminResetPasswordBtn" type="button" class="px-4 py-2 rounded-xl text-xs font-semibold bg-slate-100 text-slate-700 hover:bg-slate-200 transition">Cancel</button>
-          <button id="submitAdminResetPasswordBtn" type="submit" class="px-4 py-2 rounded-xl text-xs font-bold bg-teal-600 hover:bg-teal-500 text-white transition">Change password</button>
+          <button id="submitAdminResetPasswordBtn" type="submit" class="px-4 py-2 rounded-xl text-xs font-bold bg-teal-600 hover:bg-teal-500 text-white transition">Update password</button>
         </div>
       </form>
     </div>
@@ -804,7 +806,7 @@
       <div class="px-6 py-4 bg-slate-900 text-white flex items-center justify-between">
         <div>
           <h3 id="doctorModalTitle" class="text-base sm:text-lg font-extrabold">Approve / Configure Eye Surgeon Profile</h3>
-          <p class="text-xs text-slate-400">Saving creates an account with temporary password "1". The doctor must set a new password at first sign-in.</p>
+          <p id="doctorModalDescription" class="text-xs text-slate-400">Set the doctor's account password when creating a new profile.</p>
         </div>
         <button id="closeDoctorModalBtn" type="button" class="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition">
           <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
@@ -834,8 +836,9 @@
             <label class="block text-xs font-bold text-slate-700 mb-1">Email *</label>
             <input id="docEmailInput" type="email" required placeholder="doctor@ppec.com" class="w-full px-3 py-2 text-sm border border-slate-300 rounded-xl" />
           </div>
-          <div class="flex items-center text-xs text-slate-600">
-            Temporary password "1"; doctors must change it at first sign-in.
+          <div id="doctorInitialPasswordField">
+            <label class="block text-xs font-bold text-slate-700 mb-1" for="docInitialPasswordInput">Initial Password *</label>
+            <input id="docInitialPasswordInput" type="password" minlength="8" maxlength="128" autocomplete="new-password" placeholder="At least 8 characters" class="w-full px-3 py-2 text-sm border border-slate-300 rounded-xl" />
           </div>
         </div>
 
@@ -879,7 +882,7 @@
           </div>
         </div>
 
-        <p class="text-[11px] text-slate-500">Admins can set a new password for the doctor. Deleting a profile removes app access; the Firebase Authentication account remains.</p>
+        <p class="text-[11px] text-slate-500">Admins can email a secure password reset link. Deleting a profile removes app access; the Firebase Authentication account remains.</p>
         <div id="doctorPasswordResetResult" role="status" aria-live="polite" class="hidden rounded-xl border border-amber-200 bg-amber-50 p-3 text-xs font-semibold text-amber-900"></div>
         <div class="pt-3 border-t border-slate-200 flex items-center justify-end gap-2">
           <button type="button" id="deleteDoctorAccountBtn" class="hidden mr-auto px-3 py-2 rounded-xl text-xs font-bold bg-rose-100 text-rose-800 hover:bg-rose-200 transition">Delete doctor profile</button>
@@ -899,9 +902,9 @@
   </div>
 
   <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-    import { getAuth, signInWithCustomToken, signInWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-    import { getFirestore, doc, getDoc, getDocs, onSnapshot, collection, query, where, writeBatch } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+    import { deleteApp, initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+    import { createUserWithEmailAndPassword, deleteUser, getAuth, sendPasswordResetEmail, signInWithEmailAndPassword, signOut, updatePassword } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+    import { getFirestore, doc, getDoc, getDocs, onSnapshot, collection, query, where, writeBatch, runTransaction, updateDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
     import { getFunctions, httpsCallable } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-functions.js";
 
     // =========================================================================
@@ -1436,21 +1439,6 @@
 
     function getFirebaseLoginError(error) {
       const code = error && typeof error === 'object' ? error.code : '';
-      if (code === 'functions/unauthenticated') {
-        return 'Phone/email or password is incorrect, or this account is not approved. New accounts start with password 1.';
-      }
-      if (code === 'functions/resource-exhausted') {
-        return 'Too many sign-in attempts. Wait 15 minutes, then try again.';
-      }
-      if (code === 'functions/invalid-argument') {
-        return 'Enter a valid registered phone number or email address.';
-      }
-      if (code === 'functions/not-found') {
-        return 'The phone/email sign-in function is not deployed. Ask the Firebase project owner to deploy Cloud Functions.';
-      }
-      if (code === 'functions/internal' || code === 'functions/unavailable' || code === 'functions/unknown') {
-        return 'Phone/email sign-in service is unavailable. Check that Cloud Functions are deployed and review Firebase logs.';
-      }
       if (code === 'auth/configuration-not-found') {
         return 'Firebase Authentication is not initialized. Finish Firebase Authentication setup.';
       }
@@ -1460,7 +1448,7 @@
       if (code === 'auth/operation-not-allowed') {
         return 'Firebase Authentication is not enabled for this project.';
       }
-      if (code === 'auth/invalid-email') return 'Enter a valid email address or use your registered phone number.';
+      if (code === 'auth/invalid-email') return 'Enter a valid email address.';
       if (code === 'auth/invalid-api-key' || code === 'auth/project-not-found') {
         return 'The Firebase project configuration is invalid. Check the app Firebase settings.';
       }
@@ -1470,7 +1458,7 @@
       if (code === 'permission-denied' || code === 'firestore/permission-denied') {
         return 'Authentication succeeded, but Firestore denied access. Check Firestore database and security rules.';
       }
-      return 'Could not sign in. Check the phone/email, password, Firebase Authentication settings, and browser console.';
+      return 'Could not sign in. Check the email, password, Firebase Authentication settings, and browser console.';
     }
 
     function ensureCloudSession() {
@@ -1481,15 +1469,55 @@
 
     function getFirebaseAccountActionError(error, action) {
       const code = error && typeof error === 'object' ? error.code : '';
-      if (['functions/not-found', 'functions/unavailable', 'functions/internal', 'functions/unknown']
-        .includes(code)) {
-        return `${action} could not reach a working Firebase Function. This project currently has no deployed Functions; deploy them first, then check Functions logs if the error continues.`;
-      }
       if (code === 'functions/permission-denied' || code === 'functions/unauthenticated') {
-        return 'Only a signed-in, approved Admin can perform this action.';
+        return 'Only a signed-in, approved Admin can update a doctor password.';
       }
-      if (error && error.message) return error.message;
-      return `${action} failed. Check Firebase Functions deployment and logs.`;
+      if (code === 'functions/not-found') {
+        return 'The Admin password update service is not deployed. This feature requires Firebase Blaze; upgrade the project and deploy adminSetDoctorPassword.';
+      }
+      if (code === 'functions/unavailable') {
+        return 'Could not reach Firebase Functions. Check the connection and try again.';
+      }
+      if (code === 'functions/invalid-argument') {
+        return 'Choose a password with 8 to 128 characters.';
+      }
+      if (code === 'auth/invalid-email') {
+        return 'Enter the same valid email address that is registered in Firebase Authentication.';
+      }
+      if (code === 'auth/user-not-found') {
+        return 'No Firebase Authentication account was found for this email. Confirm the email or ask the Admin to check the account in Firebase Console.';
+      }
+      if (code === 'auth/too-many-requests') {
+        return 'Firebase temporarily blocked password reset requests. Wait a few minutes and try again.';
+      }
+      if (code === 'auth/network-request-failed') {
+        return 'Could not reach Firebase Authentication. Check your internet connection and try again.';
+      }
+      if (code === 'auth/operation-not-allowed') {
+        return 'Enable Email/Password in Firebase Authentication sign-in providers, then try again.';
+      }
+      if (code === 'auth/unauthorized-continue-uri') {
+        return 'Firebase rejected the password reset link domain. Add this app domain under Firebase Authentication > Settings > Authorized domains.';
+      }
+      if (code === 'auth/weak-password') {
+        return 'Choose a password with at least 8 characters.';
+      }
+      if (code === 'permission-denied' || code === 'firestore/permission-denied') {
+        return 'Firebase Firestore denied this action. Deploy the latest Firestore rules and confirm your Admin profile is approved.';
+      }
+      if (error && typeof error.message === 'string'
+        && error.message
+        && !['INTERNAL', 'UNKNOWN', 'INTERNAL ERROR'].includes(error.message.toUpperCase())) {
+        return `${action} failed: ${error.message}`;
+      }
+      return `${action} failed. Check Firebase Authentication, Firestore rules, and the browser console.`;
+    }
+
+    async function doctorIndexRef(collectionName, value) {
+      const bytes = new TextEncoder().encode(String(value));
+      const digest = await crypto.subtle.digest('SHA-256', bytes);
+      const key = Array.from(new Uint8Array(digest), byte => byte.toString(16).padStart(2, '0')).join('');
+      return doc(db, collectionName, key);
     }
 
     function createAuditEntry(action, details) {
@@ -1612,7 +1640,7 @@
     // =========================================================================
     async function handleLoginSubmit(e) {
       e.preventDefault();
-      const loginIdentifier = document.getElementById('loginPhoneInput').value.trim();
+      const email = document.getElementById('loginEmailInput').value.trim().toLowerCase();
       const pass = document.getElementById('loginPasswordInput').value;
       const errBanner = document.getElementById('loginErrorBanner');
       errBanner.classList.add('hidden');
@@ -1624,44 +1652,7 @@
       }
 
       try {
-        let credential;
-        let mustChangePassword = false;
-        if (loginIdentifier.includes('@')) {
-          try {
-            credential = await signInWithEmailAndPassword(auth, loginIdentifier, pass);
-            try {
-              await httpsCallable(functions, 'syncEmailPasswordForPhoneLogin')({ password: pass });
-            } catch (syncError) {
-              console.error('Email sign-in succeeded, but phone password synchronization failed:', syncError);
-            }
-          } catch (emailSignInError) {
-            const canUseCustomCredentials = [
-              'auth/invalid-credential',
-              'auth/user-not-found',
-              'auth/wrong-password'
-            ].includes(emailSignInError && emailSignInError.code);
-            if (!canUseCustomCredentials) throw emailSignInError;
-            const loginResult = await httpsCallable(functions, 'loginWithPhonePassword')({
-              identifier: loginIdentifier,
-              password: pass
-            });
-            if (!loginResult.data || typeof loginResult.data.customToken !== 'string') {
-              throw new Error('Firebase sign-in returned no authentication token. Check Cloud Functions deployment.');
-            }
-            mustChangePassword = loginResult.data.mustChangePassword === true;
-            credential = await signInWithCustomToken(auth, loginResult.data.customToken);
-          }
-        } else {
-          const loginResult = await httpsCallable(functions, 'loginWithPhonePassword')({
-            identifier: loginIdentifier,
-            password: pass
-          });
-          if (!loginResult.data || typeof loginResult.data.customToken !== 'string') {
-            throw new Error('Firebase sign-in returned no authentication token. Check Cloud Functions deployment.');
-          }
-          mustChangePassword = loginResult.data.mustChangePassword === true;
-          credential = await signInWithCustomToken(auth, loginResult.data.customToken);
-        }
+        const credential = await signInWithEmailAndPassword(auth, email, pass);
         firebaseUser = credential.user;
         const profileSnapshot = await getDoc(doc(db, FIRESTORE_COLLECTIONS.users, credential.user.uid));
         if (!profileSnapshot.exists()) {
@@ -1703,7 +1694,7 @@
             ? 'Administrator View: Full access to all surgeons, patient data, schedules, and financial settlements'
             : 'Surgeon View (Q7 Privacy): Other surgeons\' bookings appear strictly as "Bed Occupied" (confidential)'
         );
-        if (mustChangePassword || matched.mustChangePassword) {
+        if (matched.mustChangePassword) {
           document.getElementById('newPasswordInput').value = '';
           document.getElementById('cancelChangePasswordBtn').classList.add('hidden');
           document.getElementById('changePasswordModal').classList.remove('hidden');
@@ -2755,6 +2746,17 @@
     }
 
     function openDoctorProfileModal(docObj = null) {
+      const passwordInput = document.getElementById('docInitialPasswordInput');
+      document.getElementById('doctorInitialPasswordField').classList.toggle('hidden', Boolean(docObj));
+      passwordInput.required = !docObj;
+      passwordInput.disabled = Boolean(docObj);
+      passwordInput.value = '';
+      setText(
+        'doctorModalDescription',
+        docObj
+          ? 'Edit the doctor profile. Send a password reset link if the doctor needs to change their password.'
+          : 'Enter an initial password of at least 8 characters. The doctor will sign in with this email and password.'
+      );
       const resetResult = document.getElementById('doctorPasswordResetResult');
       resetResult.textContent = '';
       resetResult.classList.add('hidden');
@@ -2820,6 +2822,34 @@
 
       // Login Form
       document.getElementById('loginForm').addEventListener('submit', handleLoginSubmit);
+      document.getElementById('forgotPasswordBtn').addEventListener('click', async () => {
+        const email = document.getElementById('loginEmailInput').value.trim().toLowerCase();
+        const status = document.getElementById('passwordResetStatus');
+        const button = document.getElementById('forgotPasswordBtn');
+        status.classList.add('hidden');
+        if (!email) {
+          status.textContent = 'Enter your registered email address first.';
+          status.classList.remove('hidden');
+          return;
+        }
+        if (!auth) {
+          status.textContent = 'Firebase Authentication is not ready. Refresh the page and try again.';
+          status.classList.remove('hidden');
+          return;
+        }
+        button.disabled = true;
+        try {
+          await sendPasswordResetEmail(auth, email);
+          status.textContent = `Password reset request submitted for ${email}. If this email belongs to a Firebase Authentication account, Firebase sent a reset link. Check Inbox and Spam/Junk. For privacy, Firebase does not confirm whether the account exists.`;
+          status.classList.remove('hidden');
+        } catch (error) {
+          console.error('Password reset email failed:', error);
+          status.textContent = getFirebaseAccountActionError(error, 'Password reset email');
+          status.classList.remove('hidden');
+        } finally {
+          button.disabled = false;
+        }
+      });
 
       // Logout / Switch Account
       document.getElementById('logoutBtn').addEventListener('click', async () => {
@@ -2849,12 +2879,15 @@
       document.getElementById('changePasswordForm').addEventListener('submit', async (e) => {
         e.preventDefault();
         const newPass = document.getElementById('newPasswordInput').value;
-        if (!newPass || !loggedInUser || !firebaseUser || !functions) {
-          showToast('Sign in and connect to Firebase Functions before changing your password.');
+        if (newPass.length < 8 || newPass.length > 128 || !loggedInUser || !firebaseUser) {
+          showToast('Sign in and choose a password with 8 to 128 characters.');
           return;
         }
         try {
-          await httpsCallable(functions, 'changePhonePassword')({ newPassword: newPass });
+          await updatePassword(firebaseUser, newPass);
+          await updateDoc(doc(db, FIRESTORE_COLLECTIONS.users, firebaseUser.uid), {
+            mustChangePassword: false
+          });
           const updatedUser = { ...loggedInUser, mustChangePassword: false };
           loggedInUser = updatedUser;
           users = users.map(user => user.id === updatedUser.id ? updatedUser : user);
@@ -2870,7 +2903,7 @@
           console.error('Firebase password update failed:', error);
           showToast(error.code === 'auth/requires-recent-login'
             ? 'For security, sign out and sign in again before changing your password.'
-            : error.message || 'Password update failed. Check your connection and try again.');
+            : getFirebaseAccountActionError(error, 'Password update'));
         }
       });
       document.getElementById('changeDoctorPasswordBtn').addEventListener('click', () => {
@@ -3092,11 +3125,11 @@
         const doctorId = document.getElementById('editDoctorInternalId').value;
         const doctor = users.find(user => user.id === doctorId);
         if (!doctor || loggedInUser?.role !== 'ADMIN' || !functions) {
-          showToast('Sign in as Admin and connect to Firebase Functions before resetting a password.');
+          showToast('Sign in as Admin and connect to Firebase Functions before updating a password.');
           return;
         }
         resetPasswordDoctorId = doctor.id;
-        document.getElementById('adminResetPasswordDoctorName').textContent = `Set a new password for ${doctor.name}`;
+        document.getElementById('adminResetPasswordDoctorName').textContent = `${doctor.name} • ${doctor.email}`;
         document.getElementById('adminResetPasswordInput').value = '';
         document.getElementById('doctorProfileModal').classList.add('hidden');
         document.getElementById('adminResetPasswordModal').classList.remove('hidden');
@@ -3105,10 +3138,10 @@
       document.getElementById('adminResetPasswordForm').addEventListener('submit', async event => {
         event.preventDefault();
         const doctor = users.find(user => user.id === resetPasswordDoctorId);
-        const password = document.getElementById('adminResetPasswordInput').value;
         const submitButton = document.getElementById('submitAdminResetPasswordBtn');
-        if (!doctor || loggedInUser?.role !== 'ADMIN' || !functions) {
-          showToast('Sign in as Admin and connect to Firebase Functions before resetting a password.');
+        const password = document.getElementById('adminResetPasswordInput').value;
+        if (!doctor || !doctor.authUid || loggedInUser?.role !== 'ADMIN' || !functions) {
+          showToast('Sign in as Admin and connect to Firebase Functions before updating a password.');
           return;
         }
         if (password.length < 8 || password.length > 128) {
@@ -3117,19 +3150,24 @@
         }
         submitButton.disabled = true;
         try {
-          await httpsCallable(functions, 'resetUserPassword')({ userId: doctor.id, password });
-          const loginIds = [doctor.phone, doctor.email].filter(Boolean).join(' / ');
-          const notice = document.getElementById('doctorPasswordResetResult');
-          notice.textContent = `Password updated for ${loginIds}. Share the new password securely.`;
-          notice.classList.remove('hidden');
+          await httpsCallable(functions, 'adminSetDoctorPassword')({
+            doctorUid: doctor.authUid,
+            password
+          });
+          const updatedDoctor = { ...doctor, mustChangePassword: true };
+          users = users.map(user => user.id === doctor.id ? updatedDoctor : user);
           document.getElementById('adminResetPasswordInput').value = '';
+          const notice = document.getElementById('doctorPasswordResetResult');
+          notice.textContent = `Password updated for ${doctor.name}. Share the temporary password securely and ask the doctor to change it after signing in.`;
+          notice.classList.remove('hidden');
           document.getElementById('adminResetPasswordModal').classList.add('hidden');
           resetPasswordDoctorId = '';
           document.getElementById('doctorProfileModal').classList.remove('hidden');
+          renderAll();
           showToast(`Password updated for ${doctor.name}.`);
         } catch (error) {
-          console.error('Doctor password reset failed:', error);
-          showToast(getFirebaseAccountActionError(error, 'Password reset'));
+          console.error('Doctor password update failed:', error);
+          showToast(getFirebaseAccountActionError(error, 'Password update'));
         } finally {
           submitButton.disabled = false;
         }
@@ -3154,9 +3192,17 @@
         button.disabled = true;
         try {
           ensureCloudSession();
+          const [codeIndexRef, phoneIndexRef, profileIndexRef] = await Promise.all([
+            doctorIndexRef('_ppec_doctor_codes', String(doctor.doctorCode || '').trim().toLowerCase()),
+            doctorIndexRef('_ppec_doctor_phones', String(doctor.phone || '').replace(/\D/g, '')),
+            doctorIndexRef('_ppec_doctor_ids', String(doctor.id || '').toLowerCase())
+          ]);
           const batch = writeBatch(db);
           const auditEntry = createAuditEntry('DOCTOR_PROFILE_DELETED', `Removed app profile for ${doctor.name} (${doctor.email || doctor.phone}). Firebase Authentication account was not deleted.`);
           batch.delete(doc(db, 'ppec_user', doctor.authUid));
+          batch.delete(codeIndexRef);
+          batch.delete(phoneIndexRef);
+          batch.delete(profileIndexRef);
           batch.set(doc(db, 'ppec_eye_logs', auditEntry.id), auditEntry);
           await batch.commit();
           users = users.filter(user => user.id !== doctorId);
@@ -3176,6 +3222,7 @@
         const existingId = document.getElementById('editDoctorInternalId').value;
         const submitButton = e.submitter;
         const existingProfile = existingId ? users.find(user => user.id === existingId) : null;
+        const initialPassword = document.getElementById('docInitialPasswordInput').value;
         const docObj = {
         id: existingId || nextDoctorProfileId(),
         authUid: existingProfile?.authUid || '',
@@ -3211,27 +3258,209 @@
             throw new Error('Another profile already uses this email, Doctor ID, or phone number.');
           }
 
+          const currentProfiles = await getDocs(collection(db, FIRESTORE_COLLECTIONS.users));
+          const latestUsers = currentProfiles.docs
+            .map(profileDoc => sanitizeUserProfile({ ...profileDoc.data(), authUid: profileDoc.id }))
+            .filter(profile => profile.id);
+          users = latestUsers;
+          const currentDuplicate = latestUsers.find(user => user.id !== docObj.id && (
+            String(user.email || '').trim().toLowerCase() === docObj.email.toLowerCase()
+            || String(user.doctorCode || '').trim().toLowerCase() === docObj.doctorCode.toLowerCase()
+            || String(user.phone || '').replace(/\D/g, '') === docObj.phone.replace(/\D/g, '')
+          ));
+          if (currentDuplicate) {
+            throw new Error('Another profile already uses this email, Doctor ID, or phone number.');
+          }
+
           if (existingId) {
             if (!existingProfile) throw new Error('Doctor profile is no longer available. Refresh and try again.');
             if (docObj.email.toLowerCase() !== String(existingProfile.email || '').toLowerCase()) {
-              throw new Error('Email address cannot be changed here because it must also be updated in Firebase Authentication.');
+              throw new Error('Email address cannot be changed from the profile editor.');
             }
-            const result = await httpsCallable(functions, 'updateDoctorAccount')({ doctor: docObj });
-            const updatedProfile = sanitizeUserProfile(result.data.profile);
-            users = users.map(user => user.id === updatedProfile.id ? updatedProfile : user);
+            const profileRef = doc(db, FIRESTORE_COLLECTIONS.users, existingProfile.authUid);
+            const previousCodeRef = await doctorIndexRef('_ppec_doctor_codes', String(existingProfile.doctorCode || '').trim().toLowerCase());
+            const nextCodeRef = await doctorIndexRef('_ppec_doctor_codes', docObj.doctorCode.trim().toLowerCase());
+            const previousPhoneRef = await doctorIndexRef('_ppec_doctor_phones', String(existingProfile.phone || '').replace(/\D/g, ''));
+            const nextPhoneRef = await doctorIndexRef('_ppec_doctor_phones', docObj.phone.replace(/\D/g, ''));
+            const auditEntry = createAuditEntry(
+              'DOCTOR_PROFILE_UPDATED',
+              `Admin updated profile for ${docObj.name} (${docObj.doctorCode})`
+            );
+            const updatedProfile = {
+              ...docObj,
+              authUid: existingProfile.authUid,
+              phoneKey: docObj.phone.replace(/\D/g, ''),
+              createdAt: existingProfile.createdAt || docObj.createdAt,
+              mustChangePassword: existingProfile.mustChangePassword === true
+            };
+            const indexRefs = [...new Map(
+              [previousCodeRef, nextCodeRef, previousPhoneRef, nextPhoneRef].map(ref => [ref.path, ref])
+            ).values()];
+            await runTransaction(db, async transaction => {
+              const snapshots = await Promise.all([
+                ...indexRefs.map(ref => transaction.get(ref)),
+                transaction.get(profileRef)
+              ]);
+              const profileSnapshot = snapshots[snapshots.length - 1];
+              if (!profileSnapshot.exists() || profileSnapshot.data().role !== 'DOCTOR') {
+                throw new Error('Doctor profile is no longer available. Refresh and try again.');
+              }
+              const nextIndexes = [nextCodeRef, nextPhoneRef].map(indexRef => ({
+                ref: indexRef,
+                snapshot: snapshots[indexRefs.findIndex(ref => ref.path === indexRef.path)],
+                message: indexRef.path === nextCodeRef.path
+                  ? 'A doctor already uses this Doctor ID.'
+                  : 'A doctor profile already uses this phone number.'
+              })).filter(index => index.snapshot.exists()
+                && index.snapshot.data().profileId !== docObj.id);
+              const indexedAuthUids = [...new Set(nextIndexes
+                .map(index => index.snapshot.data().authUid)
+                .filter(uid => typeof uid === 'string' && uid))];
+              const indexedProfiles = await Promise.all(indexedAuthUids.map(uid =>
+                transaction.get(doc(db, FIRESTORE_COLLECTIONS.users, uid))
+              ));
+              const liveIndexedUids = new Set(indexedProfiles
+                .filter(indexedProfile => indexedProfile.exists())
+                .map(indexedProfile => indexedProfile.id));
+              for (const index of nextIndexes) {
+                const indexData = index.snapshot.data();
+                const isLive = typeof indexData.authUid === 'string' && indexData.authUid
+                  ? liveIndexedUids.has(indexData.authUid)
+                  : latestUsers.some(profile => profile.id === indexData.profileId);
+                if (isLive) throw new Error(index.message);
+                transaction.delete(index.ref);
+              }
+              if (previousCodeRef.path !== nextCodeRef.path) {
+                const oldCodeSnapshot = snapshots[indexRefs.findIndex(ref => ref.path === previousCodeRef.path)];
+                if (oldCodeSnapshot.exists() && oldCodeSnapshot.data().profileId === docObj.id) {
+                  transaction.delete(previousCodeRef);
+                }
+              }
+              if (previousPhoneRef.path !== nextPhoneRef.path) {
+                const oldPhoneSnapshot = snapshots[indexRefs.findIndex(ref => ref.path === previousPhoneRef.path)];
+                if (oldPhoneSnapshot.exists() && oldPhoneSnapshot.data().profileId === docObj.id) {
+                  transaction.delete(previousPhoneRef);
+                }
+              }
+              transaction.set(nextCodeRef, { profileId: docObj.id, authUid: existingProfile.authUid });
+              transaction.set(nextPhoneRef, { profileId: docObj.id, authUid: existingProfile.authUid });
+              transaction.update(profileRef, updatedProfile);
+              transaction.set(doc(db, FIRESTORE_COLLECTIONS.logs, auditEntry.id), auditEntry);
+            });
+            const safeUpdatedProfile = sanitizeUserProfile(updatedProfile);
+            users = users.map(user => user.id === safeUpdatedProfile.id ? safeUpdatedProfile : user);
             renderAll();
             document.getElementById('doctorProfileModal').classList.add('hidden');
             showToast(`Saved surgeon profile for ${docObj.name}`);
             return;
           }
 
-          const result = await httpsCallable(functions, 'createDoctorAccount')({ doctor: docObj });
-          const createdProfile = sanitizeUserProfile(result.data.profile);
+          if (initialPassword.length < 8 || initialPassword.length > 128) {
+            throw new Error('Choose an initial password with 8 to 128 characters.');
+          }
+          docObj.id = nextDoctorProfileId();
+          const codeIndexRef = await doctorIndexRef('_ppec_doctor_codes', docObj.doctorCode.trim().toLowerCase());
+          const phoneIndexRef = await doctorIndexRef('_ppec_doctor_phones', docObj.phone.replace(/\D/g, ''));
+          const profileIndexRef = await doctorIndexRef('_ppec_doctor_ids', docObj.id.toLowerCase());
+          const secondaryApp = initializeApp(firebaseConfig, `doctor-${Date.now()}-${Math.random().toString(36).slice(2)}`);
+          const secondaryAuth = getAuth(secondaryApp);
+          let newAuthUser = null;
+          let createdProfile;
+          try {
+            newAuthUser = (await createUserWithEmailAndPassword(
+              secondaryAuth,
+              docObj.email.toLowerCase(),
+              initialPassword
+            )).user;
+            const profileRef = doc(db, FIRESTORE_COLLECTIONS.users, newAuthUser.uid);
+            const auditEntry = createAuditEntry(
+              'DOCTOR_APPROVED',
+              `Admin created profile for ${docObj.name} (${docObj.doctorCode})`
+            );
+            createdProfile = sanitizeUserProfile({
+              ...docObj,
+              mustChangePassword: false,
+              authUid: newAuthUser.uid,
+              phoneKey: docObj.phone.replace(/\D/g, '')
+            });
+            await runTransaction(db, async transaction => {
+              const [codeSnapshot, phoneSnapshot, profileIdSnapshot, accountSnapshot] = await Promise.all([
+                transaction.get(codeIndexRef),
+                transaction.get(phoneIndexRef),
+                transaction.get(profileIndexRef),
+                transaction.get(profileRef)
+              ]);
+              const indexes = [
+                { ref: codeIndexRef, snapshot: codeSnapshot, message: 'A doctor already uses this Doctor ID.' },
+                { ref: phoneIndexRef, snapshot: phoneSnapshot, message: 'A doctor profile already uses this phone number.' },
+                { ref: profileIndexRef, snapshot: profileIdSnapshot, message: 'A doctor already uses this profile ID.' }
+              ].filter(index => index.snapshot.exists());
+              const indexedAuthUids = [...new Set(indexes
+                .map(index => index.snapshot.data().authUid)
+                .filter(uid => typeof uid === 'string' && uid))];
+              const indexedProfiles = await Promise.all(indexedAuthUids.map(uid =>
+                transaction.get(doc(db, FIRESTORE_COLLECTIONS.users, uid))
+              ));
+              const liveIndexedUids = new Set(indexedProfiles
+                .filter(indexedProfile => indexedProfile.exists())
+                .map(indexedProfile => indexedProfile.id));
+              for (const index of indexes) {
+                const indexData = index.snapshot.data();
+                const isLive = typeof indexData.authUid === 'string' && indexData.authUid
+                  ? liveIndexedUids.has(indexData.authUid)
+                  : latestUsers.some(profile => profile.id === indexData.profileId);
+                if (isLive) throw new Error(index.message);
+                transaction.delete(index.ref);
+              }
+              if (accountSnapshot.exists()) throw new Error('A profile already exists for this Firebase Authentication account.');
+              transaction.set(codeIndexRef, { profileId: docObj.id, authUid: newAuthUser.uid });
+              transaction.set(phoneIndexRef, { profileId: docObj.id, authUid: newAuthUser.uid });
+              transaction.set(profileIndexRef, { profileId: docObj.id, authUid: newAuthUser.uid });
+              transaction.set(profileRef, createdProfile);
+              transaction.set(doc(db, FIRESTORE_COLLECTIONS.logs, auditEntry.id), auditEntry);
+            });
+          } catch (creationError) {
+            if (newAuthUser) {
+              let persistedProfile;
+              try {
+                persistedProfile = await getDoc(doc(db, FIRESTORE_COLLECTIONS.users, newAuthUser.uid));
+              } catch (verificationError) {
+                console.error('Could not verify whether the doctor profile was saved:', verificationError);
+                throw new Error(`${creationError.message} The account may have been created; check Firestore and Firebase Authentication before retrying.`);
+              }
+              if (persistedProfile.exists()) {
+                createdProfile = sanitizeUserProfile({
+                  ...persistedProfile.data(),
+                  authUid: persistedProfile.id
+                });
+              } else {
+                try {
+                  await deleteUser(newAuthUser);
+                } catch (rollbackError) {
+                  console.error('Could not remove the new Authentication account after profile creation failed:', rollbackError);
+                  throw new Error(`${creationError.message} The Firebase Authentication account may still exist; remove it from Firebase Console before retrying.`);
+                }
+                throw creationError;
+              }
+            }
+            if (!createdProfile) throw creationError;
+          } finally {
+            try {
+              await signOut(secondaryAuth);
+            } catch (error) {
+              console.error('Could not sign out the temporary doctor Authentication session:', error);
+            }
+            try {
+              await deleteApp(secondaryApp);
+            } catch (error) {
+              console.error('Could not close the temporary doctor Firebase app:', error);
+            }
+          }
           users.push(createdProfile);
           renderAll();
           document.getElementById('doctorProfileModal').classList.add('hidden');
           showToast(docObj.status === 'Approved'
-            ? `Doctor account created. Share ${docObj.phone} / ${docObj.email} and temporary password 1 securely.`
+            ? `Doctor account created. Share ${docObj.email} and the initial password securely.`
             : 'Doctor account created as Suspended. Sign-in remains blocked until approved.');
         } catch (error) {
           console.error('Doctor profile save failed:', error);
